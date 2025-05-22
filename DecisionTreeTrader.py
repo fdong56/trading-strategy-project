@@ -7,6 +7,34 @@ import utility
 import indicators
 
 
+def get_indicators(prices_data):
+    """
+    Calculate technical indicators used for trading decisions.
+
+    Parameters
+    ----------
+    prices_data : pandas.DataFrame
+        Historical price data
+
+    Returns
+    -------
+    pandas.DataFrame containing normalized technical indicators:
+        - Bollinger Bands (%B)
+        - Relative Strength Index (RSI)
+        - Golden/Death Cross (SMA crossovers)
+    """
+    bbp_df = indicators.bollinger_band_indicator(prices_data, lookback=10)
+    bbp_df = utility.normalize_indicator(bbp_df)
+    rsi_df = indicators.rsi_indicator(prices_data, 10)
+    rsi_df = utility.normalize_indicator(rsi_df)
+    gold_cross_df = indicators.golden_death_cross(prices_data, 10, 15)
+    gold_cross_df = utility.normalize_indicator(gold_cross_df)
+    indi_df = (bbp_df.join(rsi_df)).join(gold_cross_df)
+    indi_df.ffill(inplace=True)
+    indi_df.bfill(inplace=True)
+    return indi_df
+
+
 class DecisionTreeTrader(object):
     """
     A trading system that uses an ensemble of decision trees to make trading decisions.
@@ -78,7 +106,7 @@ class DecisionTreeTrader(object):
         """
 
         prices_train = utility.process_data(symbol, pd.date_range(sd, ed))
-        indicators_df = self.get_indicators(prices_train)
+        indicators_df = get_indicators(prices_train)
         ret_df = prices_train.copy()
         ret_df = ret_df.shift(-1 * (self.N + 1)) / ret_df.shift(-1) - 1  # Future N day return
         data_train_df = indicators_df.join(ret_df).dropna()
@@ -127,7 +155,7 @@ class DecisionTreeTrader(object):
         """
 
         prices_test = utility.process_data(symbol, pd.date_range(sd, ed))
-        indicators_test_df = self.get_indicators(prices_test)
+        indicators_test_df = get_indicators(prices_test)
         data_test_x_arr = indicators_test_df.to_numpy()
         predict_res = self.learner.query(data_test_x_arr)
         trades = pd.DataFrame(0.0, index=prices_test.index, columns=prices_test.columns)
@@ -145,30 +173,3 @@ class DecisionTreeTrader(object):
                 holding_shares = 0
 
         return trades
-
-    def get_indicators(self, prices_data):
-        """
-        Calculate technical indicators used for trading decisions.
-
-        Parameters
-        ----------
-        prices_data : pandas.DataFrame
-            Historical price data
-
-        Returns
-        -------
-        pandas.DataFrame containing normalized technical indicators:
-            - Bollinger Bands (%B)
-            - Relative Strength Index (RSI)
-            - Golden/Death Cross (SMA crossovers)
-        """
-        bbp_df = indicators.bollinger_band_indicator(prices_data, lookback=10)
-        bbp_df = utility.normalize_indicator(bbp_df)
-        rsi_df = indicators.rsi_indicator(prices_data, 10)
-        rsi_df = utility.normalize_indicator(rsi_df)
-        gold_cross_df = indicators.golden_death_cross(prices_data, 10, 15)
-        gold_cross_df = utility.normalize_indicator(gold_cross_df)
-        indi_df = (bbp_df.join(rsi_df)).join(gold_cross_df)
-        indi_df.ffill(inplace=True)
-        indi_df.bfill(inplace=True)
-        return indi_df
