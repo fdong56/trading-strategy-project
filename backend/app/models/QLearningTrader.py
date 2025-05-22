@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
-import QLearner as ql
 import datetime
-import utility
-import indicators
+from .QLearner import QLearner as ql
+from ..utils import indicators, utility
 
 
 class QLearningTrader(object):

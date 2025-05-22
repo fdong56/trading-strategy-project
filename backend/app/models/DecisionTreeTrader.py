@@ -1,10 +1,9 @@
 import numpy as np
 import pandas as pd
-from temp import TreeModel as tm
-import BagEnsembleModel as bag
 import datetime
-import utility
-import indicators
+from .BagEnsembleModel import BagEnsembleModel as bag
+from .TreeModel import TreeModel as tm
+from ..utils import indicators, utility
 
 
 def get_indicators(prices_data):

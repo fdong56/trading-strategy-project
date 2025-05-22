@@ -1,9 +1,9 @@
 import argparse
 import datetime
-import utility
+from backend.app.utils import utility
 import matplotlib.pyplot as plt
-from QLearningTrader import QLearningTrader
-from DecisionTreeTrader import DecisionTreeTrader
+from backend.app.models.QLearningTrader import QLearningTrader
+from backend.app.models.DecisionTreeTrader import DecisionTreeTrader
 
 
 def parse_args():

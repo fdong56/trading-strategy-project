@@ -1,6 +1,6 @@
 import numpy as np
-import utility
 from scipy import stats
+from ..utils import utility
 
 
 class TreeModel(object):

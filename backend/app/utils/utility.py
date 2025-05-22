@@ -1,13 +1,3 @@
-"""
-Utility functions for data processing and analysis in the trading strategy project.
-
-This module provides various utility functions for:
-- Data loading and processing from CSV files
-- Technical indicator normalization
-- Portfolio value computation
-- Data validation and checking
-"""
-
 import os
 import pandas as pd
 
@@ -54,7 +44,7 @@ def symbol_to_path(symbol, base_dir=None):
         Full path to the CSV file for the given symbol
     """
     if base_dir is None:
-        base_dir = os.environ.get("MARKET_DATA_DIR", "./data/")
+        base_dir = os.environ.get("MARKET_DATA_DIR", "../../../data/")
     return os.path.join(base_dir, "{}.csv".format(str(symbol)))
 
 
