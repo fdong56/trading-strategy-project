@@ -1,0 +1,10 @@
+name: strategy_env
+channels:
+  - conda-forge  # Recommended for up-to-date packages
+dependencies:
+  - python=3.9
+  - numpy
+  - pandas
+  - matplotlib
+  - pytest
+  - scipy
