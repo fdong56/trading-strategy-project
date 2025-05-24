@@ -43,27 +43,44 @@ class QLearningTrader(object):
   		  	   		 	   			  		 			     			  	 
     # Train the model for trading
     def train_model(
-        self,  		  	   		 	   			  		 			     			  	 
-        symbol="IBM",  		  	   		 	   			  		 			     			  	 
+        self,
+        symbol="IBM",
         sd=datetime.datetime(2008, 1, 1),
         ed=datetime.datetime(2009, 1, 1),
-        sv=100000
-    ):  		  	   		 	   			  		 			     			  	 
-        """  		  	   		 	   			  		 			     			  	 
-        Train the strategy model over a given time frame.  		  	   		 	   			  		 			     			  	 
-  		  	   		 	   			  		 			     			  	 
-        :param symbol: The stock symbol to train on  		  	   		 	   			  		 			     			  	 
-        :type symbol: str  		  	   		 	   			  		 			     			  	 
-        :param sd: A datetime object that represents the start date, defaults to 1/1/2008  		  	   		 	   			  		 			     			  	 
-        :type sd: datetime  		  	   		 	   			  		 			     			  	 
-        :param ed: A datetime object that represents the end date, defaults to 1/1/2009  		  	   		 	   			  		 			     			  	 
-        :type ed: datetime  		  	   		 	   			  		 			     			  	 
-        :param sv: The starting value of the portfolio  		  	   		 	   			  		 			     			  	 
-        :type sv: int  		  	   		 	   			  		 			     			  	 
-        """  		  	   		 	   			  		 			     			  	 
+        sv=100000,
+        indicators_with_params=None
+    ):
+        """
+        Train the strategy model over a given time frame using user-specified indicators and parameters.
 
+        Parameters
+        ----------
+        symbol : str
+            The stock symbol to train on
+        sd : datetime
+            Start date for training data
+        ed : datetime
+            End date for training data
+        sv : int
+            The starting value of the portfolio
+        indicators_with_params : dict, optional
+            Dictionary mapping indicator names to their parameter dicts. Must specify exactly three indicators. Example:
+            {
+                "bbp": {"lookback": 10},
+                "rsi": {"lookback": 10},
+                "macd": {"short_period": 12, "long_period": 26}
+            }
+        """
+
+        if indicators_with_params is None:
+            indicators_with_params = {
+                "bbp": {"lookback": 10},
+                "rsi": {"lookback": 10},
+                "macd": {"short_period": 12, "long_period": 26}
+            }
+        self.indicators_with_params = indicators_with_params  # Store for later use
         prices_train = utility.process_data(symbol, pd.date_range(sd, ed))
-        indi_states_df = self.get_indi_states(prices_train)
+        indi_states_df = self.get_indi_states(prices_train, indicators_with_params)
 
         last_cum_ret = -100
         current_cum_ret = 0
@@ -87,32 +104,35 @@ class QLearningTrader(object):
 
     # Test the model against new data
     def test_model(
-        self,  		  	   		 	   			  		 			     			  	 
-        symbol="IBM",  		  	   		 	   			  		 			     			  	 
+        self,
+        symbol="IBM",
         sd=datetime.datetime(2009, 1, 1),
         ed=datetime.datetime(2010, 1, 1),
         sv=100000
-    ):  		  	   		 	   			  		 			     			  	 
-        """  		  	   		 	   			  		 			     			  	 
-        Tests your learner using data outside of the training data  		  	   		 	   			  		 			     			  	 
-  		  	   		 	   			  		 			     			  	 
-        :param symbol: The stock symbol that you trained on on  		  	   		 	   			  		 			     			  	 
-        :type symbol: str  		  	   		 	   			  		 			     			  	 
-        :param sd: A datetime object that represents the start date, defaults to 1/1/2008  		  	   		 	   			  		 			     			  	 
-        :type sd: datetime  		  	   		 	   			  		 			     			  	 
-        :param ed: A datetime object that represents the end date, defaults to 1/1/2009  		  	   		 	   			  		 			     			  	 
-        :type ed: datetime  		  	   		 	   			  		 			     			  	 
-        :param sv: The starting value of the portfolio  		  	   		 	   			  		 			     			  	 
-        :type sv: int  		  	   		 	   			  		 			     			  	 
-        :return: A DataFrame with values representing trades for each day. Legal values are +1000.0 indicating  		  	   		 	   			  		 			     			  	 
-            a BUY of 1000 shares, -1000.0 indicating a SELL of 1000 shares, and 0.0 indicating NOTHING.  		  	   		 	   			  		 			     			  	 
-            Values of +2000 and -2000 for trades are also legal when switching from long to short or short to  		  	   		 	   			  		 			     			  	 
-            long so long as net holdings are constrained to -1000, 0, and 1000.  		  	   		 	   			  		 			     			  	 
-        :rtype: pandas.DataFrame  		  	   		 	   			  		 			     			  	 
+    ):
         """
+        Test the trained model using the same indicators and parameters as in training.
 
+        Parameters
+        ----------
+        symbol : str
+            The stock symbol to test on
+        sd : datetime
+            Start date for test data
+        ed : datetime
+            End date for test data
+        sv : int
+            The starting value of the portfolio
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame with values representing trades for each day.
+        """
+        if not hasattr(self, "indicators_with_params") or self.indicators_with_params is None:
+            raise ValueError("No indicators_with_params stored from training. Please train the model first.")
         prices_test = utility.process_data(symbol, pd.date_range(sd, ed))
-        indi_states_test = self.get_indi_states(prices_test)
+        indi_states_test = self.get_indi_states(prices_test, self.indicators_with_params)
         day = 0
         holding_shares = 0
         trades_test = pd.DataFrame(0, index=prices_test.index, columns=prices_test.columns)
@@ -124,11 +144,38 @@ class QLearningTrader(object):
             day += 1
         return trades_test
 
-    def get_indi_states(self, prices_data):
-        bbp_df = indicators.bollinger_band_indicator(prices_data, lookback=10)
-        rsi_df = indicators.rsi_indicator(prices_data, 10)
-        macd_df = indicators.macd_indicator(prices_data, short_period=12, long_period=26)
-        indi_states = self.discretize(bbp_df, rsi_df, macd_df)
+    def get_indi_states(self, prices_data, indicators_with_params=None):
+        """
+        Compute indicator states for Q-Learning using user-specified indicators and parameters.
+
+        Parameters
+        ----------
+        prices_data : pandas.DataFrame
+            Historical price data
+        indicators_with_params : dict, optional
+            Dictionary mapping indicator names to their parameter dicts. Must specify exactly three indicators.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame of discretized indicator states.
+        """
+        # Default indicators if none provided
+        indicator_funcs = {
+            "gold cross": indicators.golden_death_cross,
+            "bbp": indicators.bollinger_band_indicator,
+            "roc": indicators.roc_indicator,
+            "macd": indicators.macd_indicator,
+            "rsi": indicators.rsi_indicator,
+        }
+        # Compute the three indicators
+        indicator_dfs = []
+        for name, params in indicators_with_params.items():
+            if name not in indicator_funcs:
+                raise ValueError(f"Indicator '{name}' is not supported.")
+            df = indicator_funcs[name](prices_data, **params)
+            indicator_dfs.append(df)
+        indi_states = self.discretize(*indicator_dfs)
         return indi_states
 
     def calculate_reward(self, i_day, a, holding, prices_data):

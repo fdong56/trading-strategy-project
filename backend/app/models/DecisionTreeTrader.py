@@ -6,29 +6,52 @@ from .TreeModel import TreeModel as tm
 from ..utils import indicators, utility
 
 
-def get_indicators(prices_data):
+def get_indicators(prices_data, indicators_with_params):
     """
-    Calculate technical indicators used for trading decisions.
+    Calculate and normalize selected technical indicators with user-defined parameters.
 
     Parameters
     ----------
     prices_data : pandas.DataFrame
         Historical price data
+    indicators_with_params : dict
+        Mapping of indicator names to their parameter dicts. Example:
+        {
+            "gold cross": {"lookback_1": 10, "lookback_2": 15},
+            "bbp": {"lookback": 20},
+            "roc": {"lookback": 5}
+        }
 
     Returns
     -------
-    pandas.DataFrame containing normalized technical indicators:
-        - Bollinger Bands (%B)
-        - Relative Strength Index (RSI)
-        - Golden/Death Cross (SMA crossovers)
+    pandas.DataFrame containing the selected normalized technical indicators.
     """
-    bbp_df = indicators.bollinger_band_indicator(prices_data, lookback=10)
-    bbp_df = utility.normalize_indicator(bbp_df)
-    rsi_df = indicators.rsi_indicator(prices_data, 10)
-    rsi_df = utility.normalize_indicator(rsi_df)
-    gold_cross_df = indicators.golden_death_cross(prices_data, 10, 15)
-    gold_cross_df = utility.normalize_indicator(gold_cross_df)
-    indi_df = (bbp_df.join(rsi_df)).join(gold_cross_df)
+    
+    indicator_funcs = {
+        "gold cross": indicators.golden_death_cross,
+        "bbp": indicators.bollinger_band_indicator,
+        "roc": indicators.roc_indicator,
+        "macd": indicators.macd_indicator,
+        "rsi": indicators.rsi_indicator,
+    }
+
+    indicator_mapping = {}
+
+    for name, params in indicators_with_params.items():
+        if name not in indicator_funcs:
+            raise ValueError(f"Indicator '{name}' is not supported.")
+        # Always pass prices_data as the first argument, then unpack params
+        indi_df = indicator_funcs[name](prices_data, **params)
+        indi_df = utility.normalize_indicator(indi_df)
+        indicator_mapping[name] = indi_df
+
+    # Join all selected indicators
+    indi_df = None
+    for df in indicator_mapping.values():
+        if indi_df is None:
+            indi_df = df
+        else:
+            indi_df = indi_df.join(df)
     indi_df.ffill(inplace=True)
     indi_df.bfill(inplace=True)
     return indi_df
@@ -82,10 +105,11 @@ class DecisionTreeTrader(object):
             self,
             symbol="IBM",
             sd=datetime.datetime(2008, 1, 1),
-            ed=datetime.datetime(2009, 1, 1)
+            ed=datetime.datetime(2009, 1, 1),
+            indicators_with_params=None
     ):
         """
-        Train the trading model using historical data.
+        Train the trading model using historical data and user-specified indicators.
 
         Parameters
         ----------
@@ -95,17 +119,20 @@ class DecisionTreeTrader(object):
             Start date for training data, defaults to 1/1/2008
         ed : datetime, optional
             End date for training data, defaults to 1/1/2009
-
-        Notes
-        -----
-        The model uses technical indicators to predict future returns and classifies them into:
-        - Long (+1): When N-day return > YBUY
-        - Short (-1): When N-day return < YSELL
-        - Cash (0): Otherwise
+        indicators_with_params : dict, optional
+            Mapping of indicator names to their parameter dicts. If None, defaults will be used.
         """
 
+        if indicators_with_params is None:
+            indicators_with_params = {
+                "bbp": {"lookback": 10},
+                "rsi": {"lookback": 10},
+                "macd": {"short_period": 12, "long_period": 26}
+            }
+        self.indicators_with_params = indicators_with_params
+
         prices_train = utility.process_data(symbol, pd.date_range(sd, ed))
-        indicators_df = get_indicators(prices_train)
+        indicators_df = get_indicators(prices_train, indicators_with_params)
         ret_df = prices_train.copy()
         ret_df = ret_df.shift(-1 * (self.N + 1)) / ret_df.shift(-1) - 1  # Future N day return
         data_train_df = indicators_df.join(ret_df).dropna()
@@ -114,7 +141,7 @@ class DecisionTreeTrader(object):
         # Classify Y column (last column) into three categories:
         # +1 (Long): N-day return > YBUY
         # -1 (Short): N-day return < YSELL
-        # 0 (Cash): Other
+        # 0 (Cash): Otherwise
         data_train_arr[:, -1] = np.where(data_train_arr[:, -1] > self.YBUY, 1, data_train_arr[:, -1])
         data_train_arr[:, -1] = np.where(data_train_arr[:, -1] < self.YSELL, -1, data_train_arr[:, -1])
         data_train_arr[:, -1] = np.where((data_train_arr[:, -1] != 1) & (data_train_arr[:, -1] != -1), 0, data_train_arr[:, -1])
@@ -132,7 +159,7 @@ class DecisionTreeTrader(object):
             ed=datetime.datetime(2010, 1, 1)
     ):
         """
-        Test the trading model on out-of-sample data.
+        Test the trading model on out-of-sample data using the same indicators and parameters as training.
 
         Parameters
         ----------
@@ -153,8 +180,11 @@ class DecisionTreeTrader(object):
             - +2000.0/-2000.0: Switch positions (long to short or vice versa)
         """
 
+        if not hasattr(self, "indicators_with_params") or self.indicators_with_params is None:
+            raise ValueError("No indicators_with_params stored from training. Please train the model first.")
+
         prices_test = utility.process_data(symbol, pd.date_range(sd, ed))
-        indicators_test_df = get_indicators(prices_test)
+        indicators_test_df = get_indicators(prices_test, indicators_with_params)
         data_test_x_arr = indicators_test_df.to_numpy()
         predict_res = self.learner.query(data_test_x_arr)
         trades = pd.DataFrame(0.0, index=prices_test.index, columns=prices_test.columns)
