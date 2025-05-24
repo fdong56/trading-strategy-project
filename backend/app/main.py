@@ -62,6 +62,7 @@ class ModelConfig(BaseModel):
     model_type: str
     qlearning_config: Optional[QLearningConfig] = None
     decision_tree_config: Optional[DecisionTreeConfig] = None
+    indicators_with_params: Optional[dict] = None  # New field for indicator configs
 
 class ModelResponse(BaseModel):
     model_type: str
@@ -106,7 +107,7 @@ async def list_models():
 
 @app.post("/api/train")
 async def train_model(config: ModelConfig):
-    """Train a trading model with specified parameters"""
+    """Train a trading model with specified parameters and indicator configuration"""
     try:
         if config.model_type == "QLearningTrader":
             if not config.qlearning_config:
@@ -126,7 +127,8 @@ async def train_model(config: ModelConfig):
                 symbol=config.qlearning_config.symbol,
                 sd=config.qlearning_config.start_date,
                 ed=config.qlearning_config.end_date,
-                sv=config.qlearning_config.start_val
+                sv=config.qlearning_config.start_val,
+                indicators_with_params=config.indicators_with_params
             )
             # Store the trained model
             trained_models[config.model_type] = model
@@ -147,7 +149,8 @@ async def train_model(config: ModelConfig):
                 symbol=config.decision_tree_config.symbol,
                 sd=config.decision_tree_config.start_date,
                 ed=config.decision_tree_config.end_date,
-                sv=config.decision_tree_config.start_val
+                sv=config.decision_tree_config.start_val,
+                indicators_with_params=config.indicators_with_params
             )
             # Store the trained model
             trained_models[config.model_type] = model
@@ -161,7 +164,7 @@ async def train_model(config: ModelConfig):
 
 @app.post("/api/test")
 async def test_model(config: ModelConfig):
-    """Test a trained model with specified parameters"""
+    """Test a trained model with specified parameters (uses indicators from training)"""
     try:
         # Check if the model is trained
         if config.model_type not in trained_models:
@@ -172,7 +175,7 @@ async def test_model(config: ModelConfig):
         if config.model_type == "QLearningTrader":
             if not config.qlearning_config:
                 raise HTTPException(status_code=400, detail="QLearning configuration is required")
-            # Test the model
+            # Test the model (uses indicators from training)
             trades = model.test_model(
                 symbol=config.qlearning_config.symbol,
                 sd=config.qlearning_config.start_date,
@@ -182,7 +185,7 @@ async def test_model(config: ModelConfig):
         elif config.model_type == "DecisionTreeTrader":
             if not config.decision_tree_config:
                 raise HTTPException(status_code=400, detail="Decision Tree configuration is required")
-            # Test the model
+            # Test the model (uses indicators from training)
             trades = model.test_model(
                 symbol=config.decision_tree_config.symbol,
                 sd=config.decision_tree_config.start_date,

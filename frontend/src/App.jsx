@@ -1,6 +1,47 @@
 import React, { useState } from 'react';
 import './App.css';
 
+// Supported indicators and their parameter schemas
+const INDICATOR_OPTIONS = [
+  {
+    key: 'gold cross',
+    label: 'Gold Cross',
+    params: [
+      { key: 'lookback_1', label: 'Short SMA Window', type: 'number', placeholder: 'e.g. 10' },
+      { key: 'lookback_2', label: 'Long SMA Window', type: 'number', placeholder: 'e.g. 15' },
+    ],
+  },
+  {
+    key: 'bbp',
+    label: 'Bollinger Bands %B',
+    params: [
+      { key: 'lookback', label: 'Lookback', type: 'number', placeholder: 'e.g. 20' },
+    ],
+  },
+  {
+    key: 'roc',
+    label: 'Rate of Change (ROC)',
+    params: [
+      { key: 'lookback', label: 'Lookback', type: 'number', placeholder: 'e.g. 10' },
+    ],
+  },
+  {
+    key: 'macd',
+    label: 'MACD',
+    params: [
+      { key: 'short_period', label: 'Short Period', type: 'number', placeholder: 'e.g. 12' },
+      { key: 'long_period', label: 'Long Period', type: 'number', placeholder: 'e.g. 26' },
+    ],
+  },
+  {
+    key: 'rsi',
+    label: 'RSI',
+    params: [
+      { key: 'lookback', label: 'Lookback', type: 'number', placeholder: 'e.g. 10' },
+    ],
+  },
+];
+
 const MODEL_CONFIGS = {
   DecisionTreeTrader: [
     { key: 'n_day_return', label: 'N day return', type: 'number', placeholder: 'e.g. 5' },
@@ -19,8 +60,13 @@ const MODEL_CONFIGS = {
   ],
 };
 
+// List of stock symbols from data/ directory
+const STOCK_SYMBOLS = [
+  "ZMH", "XTO", "XYL", "YHOO", "YUM", "ZION", "XLNX", "XOM", "XRAY", "XRX", "WYN", "WYNN", "X", "XEL", "XL", "WPX", "WU", "WWY", "WY", "WYE", "WMB", "WMT", "WPI", "WPO", "WHR", "WIN", "WLP", "WM", "WEN", "WFC", "WFM", "WFR", "WFT", "WAT", "WB", "WDC", "WEC", "VRSN", "VTR", "VZ", "WAG", "WAMUQ", "VIAB", "VLO", "VMC", "VNO", "UTX", "V", "VAR", "VFC", "VIA.B", "UNP", "UPS", "URBN", "USB", "UST", "TYC", "UIS", "UNH", "UNM", "TWC", "TWX", "TXN", "TXT", "TROW", "TRV", "TSN", "TSO", "TSS", "TMO", "TRIP", "TJX", "TLAB", "TMK", "TGT", "THC", "TIE", "TIF", "TE", "TEG", "TEL", "TER", "TEX", "SYMC", "SYY", "T", "TAP", "TDC", "SWK", "SWN", "SWY", "SYK", "STX", "STZ", "SUN", "SVU", "STI", "STJ"
+];
+
 function App() {
-  const [selectedModel, setSelectedModel] = useState('');
+  const [selectedModel, setSelectedModel] = useState('DecisionTreeTrader');
   const [config, setConfig] = useState({
     symbol: '',
     start_date: '',
@@ -28,35 +74,74 @@ function App() {
     impact: '',
     commission: '',
     start_val: '',
-    // Model-specific fields will be added dynamically
+    n_day_return: '',
+    y_buy: '',
+    y_sell: '',
+    leaf_size: '',
+    num_bags: '',
   });
+  const [selectedIndicators, setSelectedIndicators] = useState([
+    '', '', ''
+  ]);
+  const [indicatorParams, setIndicatorParams] = useState({});
 
+  // Handle model config changes
   const handleConfigChange = (field, value) => {
-    setConfig(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    setConfig(prev => ({ ...prev, [field]: value }));
   };
 
+  // Handle model selection
   const handleModelChange = (e) => {
     const model = e.target.value;
     setSelectedModel(model);
-    // Optionally reset model-specific fields
     if (MODEL_CONFIGS[model]) {
       const newFields = {};
       MODEL_CONFIGS[model].forEach(param => {
         newFields[param.key] = '';
       });
-      setConfig(prev => ({
-        ...prev,
-        ...newFields,
-      }));
+      setConfig(prev => ({ ...prev, ...newFields }));
     }
+  };
+
+  // Handle indicator selection
+  const handleIndicatorSelect = (idx, value) => {
+    const newSelected = [...selectedIndicators];
+    newSelected[idx] = value;
+    setSelectedIndicators(newSelected);
+    // Reset params for this indicator
+    setIndicatorParams(prev => {
+      const newParams = { ...prev };
+      newParams[value] = {};
+      return newParams;
+    });
+  };
+
+  // Handle indicator parameter change
+  const handleIndicatorParamChange = (indicator, paramKey, value) => {
+    setIndicatorParams(prev => ({
+      ...prev,
+      [indicator]: {
+        ...prev[indicator],
+        [paramKey]: value
+      }
+    }));
+  };
+
+  // Build indicators_with_params for API
+  const buildIndicatorsWithParams = () => {
+    const result = {};
+    selectedIndicators.forEach(ind => {
+      if (ind) {
+        result[ind] = { ...indicatorParams[ind] };
+      }
+    });
+    return result;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // For now, just alert the config
+    const indicators_with_params = buildIndicatorsWithParams();
+    // For now, just alert the config and indicators
     alert(
       `Model: ${selectedModel}\n` +
       `Symbol: ${config.symbol}\n` +
@@ -72,8 +157,10 @@ function App() {
         }, {}),
         null,
         2
-      )}`
+      )}\n` +
+      `Indicators with Params:\n${JSON.stringify(indicators_with_params, null, 2)}`
     );
+    // Here you would POST to your backend API with indicators_with_params
   };
 
   return (
@@ -92,20 +179,22 @@ function App() {
               onChange={handleModelChange}
               required
             >
-              <option value="">Select a model</option>
               <option value="DecisionTreeTrader">Random Forest</option>
               <option value="QLearningTrader">Q Learning</option>
             </select>
 
             <label htmlFor="symbol">Stock Symbol</label>
-            <input
-              type="text"
+            <select
               id="symbol"
-              placeholder="e.g. AAPL"
               value={config.symbol}
               onChange={e => handleConfigChange('symbol', e.target.value)}
               required
-            />
+            >
+              <option value="">Select a symbol</option>
+              {STOCK_SYMBOLS.map(sym => (
+                <option key={sym} value={sym}>{sym}</option>
+              ))}
+            </select>
 
             <div className="chart-placeholder" title="Mock stock chart"></div>
 
@@ -176,6 +265,40 @@ function App() {
                     />
                   </div>
                 ))}
+            </div>
+
+            <div className="section">
+              <h3>📊 Select Indicators & Set Parameters</h3>
+              {[0, 1, 2].map(idx => (
+                <div key={idx} style={{ marginBottom: 16 }}>
+                  <label>Select Indicator {idx + 1}</label>
+                  <select
+                    value={selectedIndicators[idx]}
+                    onChange={e => handleIndicatorSelect(idx, e.target.value)}
+                    required
+                  >
+                    <option value="">Select indicator</option>
+                    {INDICATOR_OPTIONS.filter(opt => !selectedIndicators.includes(opt.key) || selectedIndicators[idx] === opt.key).map(opt => (
+                      <option key={opt.key} value={opt.key}>{opt.label}</option>
+                    ))}
+                  </select>
+                  {/* Show parameter fields for this indicator */}
+                  {selectedIndicators[idx] &&
+                    INDICATOR_OPTIONS.find(opt => opt.key === selectedIndicators[idx]).params.map(param => (
+                      <div key={param.key} style={{ marginLeft: 12 }}>
+                        <label>{param.label}</label>
+                        <input
+                          className="param-input"
+                          type={param.type}
+                          placeholder={param.placeholder}
+                          value={indicatorParams[selectedIndicators[idx]]?.[param.key] || ''}
+                          onChange={e => handleIndicatorParamChange(selectedIndicators[idx], param.key, e.target.value)}
+                          required
+                        />
+                      </div>
+                    ))}
+                </div>
+              ))}
             </div>
 
             <button type="submit">🚀 Train Model</button>
