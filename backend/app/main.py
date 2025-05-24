@@ -13,6 +13,9 @@ from models.DecisionTreeTrader import DecisionTreeTrader
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+# Store for trained models
+trained_models: Dict[str, object] = {}
+
 app = FastAPI(
     title="Trading Strategy API",
     description="API for training and testing trading strategies",
@@ -125,6 +128,8 @@ async def train_model(config: ModelConfig):
                 ed=config.qlearning_config.end_date,
                 sv=config.qlearning_config.start_val
             )
+            # Store the trained model
+            trained_models[config.model_type] = model
         elif config.model_type == "DecisionTreeTrader":
             if not config.decision_tree_config:
                 raise HTTPException(status_code=400, detail="Decision Tree configuration is required")
@@ -144,6 +149,8 @@ async def train_model(config: ModelConfig):
                 ed=config.decision_tree_config.end_date,
                 sv=config.decision_tree_config.start_val
             )
+            # Store the trained model
+            trained_models[config.model_type] = model
         else:
             raise HTTPException(status_code=400, detail="Invalid model type")
 
@@ -156,19 +163,15 @@ async def train_model(config: ModelConfig):
 async def test_model(config: ModelConfig):
     """Test a trained model with specified parameters"""
     try:
+        # Check if the model is trained
+        if config.model_type not in trained_models:
+            raise HTTPException(status_code=400, detail=f"Model {config.model_type} has not been trained yet")
+
+        model = trained_models[config.model_type]
+
         if config.model_type == "QLearningTrader":
             if not config.qlearning_config:
                 raise HTTPException(status_code=400, detail="QLearning configuration is required")
-            model = QLearningTrader(
-                impact=config.qlearning_config.impact,
-                commission=config.qlearning_config.commission,
-                bins=config.qlearning_config.bins,
-                alpha=config.qlearning_config.alpha,
-                gamma=config.qlearning_config.gamma,
-                rar=config.qlearning_config.rar,
-                radr=config.qlearning_config.radr,
-                dyna=config.qlearning_config.dyna
-            )
             # Test the model
             trades = model.test_model(
                 symbol=config.qlearning_config.symbol,
@@ -179,15 +182,6 @@ async def test_model(config: ModelConfig):
         elif config.model_type == "DecisionTreeTrader":
             if not config.decision_tree_config:
                 raise HTTPException(status_code=400, detail="Decision Tree configuration is required")
-            model = DecisionTreeTrader(
-                impact=config.decision_tree_config.impact,
-                commission=config.decision_tree_config.commission,
-                n_day_return=config.decision_tree_config.n_day_return,
-                y_buy=config.decision_tree_config.y_buy,
-                y_sell=config.decision_tree_config.y_sell,
-                leaf_size=config.decision_tree_config.leaf_size,
-                num_bags=config.decision_tree_config.num_bags
-            )
             # Test the model
             trades = model.test_model(
                 symbol=config.decision_tree_config.symbol,
