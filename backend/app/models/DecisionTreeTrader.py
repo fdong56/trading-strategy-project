@@ -184,7 +184,7 @@ class DecisionTreeTrader(object):
             raise ValueError("No indicators_with_params stored from training. Please train the model first.")
 
         prices_test = utility.process_data(symbol, pd.date_range(sd, ed))
-        indicators_test_df = get_indicators(prices_test, indicators_with_params)
+        indicators_test_df = get_indicators(prices_test, self.indicators_with_params)
         data_test_x_arr = indicators_test_df.to_numpy()
         predict_res = self.learner.query(data_test_x_arr)
         trades = pd.DataFrame(0.0, index=prices_test.index, columns=prices_test.columns)
