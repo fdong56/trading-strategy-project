@@ -83,16 +83,36 @@ function App() {
   });
   const [stockSymbols, setStockSymbols] = useState([]);
   const [selectedIndicators, setSelectedIndicators] = useState([
-    '', '', ''
+    'macd', 'rsi', 'bbp'
   ]);
-  const [indicatorParams, setIndicatorParams] = useState({});
+  const [indicatorParams, setIndicatorParams] = useState({
+    macd: {
+      short_period: '12',
+      long_period: '26',
+      signal_period: '9'
+    },
+    rsi: {
+      lookback: '14'
+    },
+    bbp: {
+      lookback: '20'
+    }
+  });
   const [trainingResult, setTrainingResult] = useState(null);
 
   useEffect(() => {
-    fetch('/api/symbols')
-      .then(res => res.json())
+    fetch('http://localhost:8000/api/symbols')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => setStockSymbols(data.symbols))
-      .catch(() => setStockSymbols([]));
+      .catch(error => {
+        console.error('Error fetching symbols:', error);
+        setStockSymbols([]);
+      });
   }, []);
 
   // Handle model config changes
