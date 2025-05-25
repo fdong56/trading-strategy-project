@@ -9,6 +9,10 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from backend.app.models.QLearningTrader import QLearningTrader
 from backend.app.models.DecisionTreeTrader import DecisionTreeTrader
 import glob
+from backend.app.utils.utility import compute_portvals  # Add this import at the top
+import logging
+import traceback
+logging.basicConfig(level=logging.DEBUG)
 
 # Store for trained models
 trained_models: Dict[str, object] = {}
@@ -146,7 +150,6 @@ async def train_model(config: ModelConfig):
                 symbol=config.decision_tree_config.symbol,
                 sd=config.decision_tree_config.start_date,
                 ed=config.decision_tree_config.end_date,
-                sv=config.decision_tree_config.start_val,
                 indicators_with_params=config.indicators_with_params
             )
             # Store the trained model
@@ -157,6 +160,8 @@ async def train_model(config: ModelConfig):
         return {"message": f"Successfully trained {config.model_type}"}
 
     except Exception as e:
+        print("EXCEPTION in /api/train:", e, flush=True)
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/test")
@@ -192,22 +197,68 @@ async def test_model(config: ModelConfig):
         else:
             raise HTTPException(status_code=400, detail="Invalid model type")
 
-        # Convert trades DataFrame to dict for JSON response
-        trades_dict = trades.to_dict(orient='records')
-
-        return {
-            "message": f"Successfully tested {config.model_type}",
-            "trades": trades_dict
-        }
+        return trades
 
     except Exception as e:
+        print("EXCEPTION in /api/test:", e, flush=True)
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/plot")
+async def get_plot_data(config: ModelConfig):
+    """Get plot data for model vs benchmark comparison"""
+    try:
+        # Get model trades using test_model endpoint
+        trades_model = await test_model(config)
+        
+        # Get benchmark trades
+        trades_benchmark = trades_model.copy()
+        trades_benchmark.iloc[:, :] = 0.0
+        trades_benchmark.iloc[0, 0] = 1000
+
+        # Get the base config values
+        base_config = config.qlearning_config if config.model_type == "QLearningTrader" else config.decision_tree_config
+
+        # Compute portfolio value
+        portvals_benchmark = compute_portvals(trades_benchmark,
+                                              start_val=base_config.start_val,
+                                              commission=base_config.commission,
+                                              impact=base_config.impact,
+                                              symbol=base_config.symbol)
+        portvals_benchmark_normalized = portvals_benchmark / portvals_benchmark.iloc[0]
+
+        portvals_model = compute_portvals(trades_model,
+                                        start_val=base_config.start_val,
+                                        commission=base_config.commission,
+                                        impact=base_config.impact,
+                                        symbol=base_config.symbol)
+        portvals_model_normalized = portvals_model / portvals_model.iloc[0]
+
+        # Convert trades to plot data
+        plot_data = {
+            "dates": trades_model.index.tolist(),
+            "model_values": portvals_model_normalized[portvals_model_normalized.columns[0]].tolist(),
+            "benchmark_values": portvals_benchmark_normalized[portvals_benchmark_normalized.columns[0]].tolist(),
+            "symbol": base_config.symbol
+        }
+        return plot_data
+
+    except Exception as e:
+        print("EXCEPTION in /api/plot:", e, flush=True)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/symbols")
 async def get_symbols():
     """
     Return a sorted list of all available stock symbols (from CSV files in data/).
     """
-    csv_files = glob.glob("data/**/*.csv", recursive=True)
-    symbols = sorted({os.path.splitext(os.path.basename(f))[0] for f in csv_files})
-    return {"symbols": symbols} 
+    try:
+        csv_files = glob.glob("data/**/*.csv", recursive=True)
+        symbols = sorted({os.path.splitext(os.path.basename(f))[0] for f in csv_files})
+        return {"symbols": symbols}
+    except Exception as e:
+        print("EXCEPTION in /api/symbols:", e, flush=True)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

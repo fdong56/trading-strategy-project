@@ -44,8 +44,11 @@ def symbol_to_path(symbol, base_dir=None):
         Full path to the CSV file for the given symbol
     """
     if base_dir is None:
-        base_dir = os.environ.get("MARKET_DATA_DIR", "../../../data/")
-    return os.path.join(base_dir, "{}.csv".format(str(symbol)))
+        # Always resolve data directory relative to the project root
+        base_dir = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "../../../data/")
+        )
+    return os.path.join(base_dir, f"{symbol}.csv")
 
 
 def get_data(symbols, dates, add_spy=True, col_name="Adj Close"):
@@ -71,9 +74,10 @@ def get_data(symbols, dates, add_spy=True, col_name="Adj Close"):
         DataFrame containing the stock data, indexed by date
     """
     df = pd.DataFrame(index=dates)
-    if add_spy and "SPY" not in symbols:  # add SPY for reference, if absent
-        symbols = ["SPY"] + list(symbols)  # handles the case where the symbol is np array of 'object'
-
+    df.index = df.index.tz_localize(None)
+    # print("DEBUG: df index tz before join:", df.index.tz)
+    if add_spy and "SPY" not in symbols:
+        symbols = ["SPY"] + list(symbols)
     for symbol in symbols:
         df_temp = pd.read_csv(
             symbol_to_path(symbol),
@@ -83,8 +87,9 @@ def get_data(symbols, dates, add_spy=True, col_name="Adj Close"):
             na_values=["nan"]
         )
         df_temp = df_temp.rename(columns={col_name: symbol})
+        # print(f"DEBUG: df_temp index tz for {symbol}:", df_temp.index.tz)
         df = df.join(df_temp)
-        if symbol == "SPY":  # drop dates SPY did not trade
+        if symbol == "SPY":
             df = df.dropna(subset=["SPY"])
     return df
 

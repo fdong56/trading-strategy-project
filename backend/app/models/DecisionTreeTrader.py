@@ -4,7 +4,6 @@ import datetime
 from backend.app.models.BagEnsembleModel import BagEnsembleModel as bag
 from backend.app.models.TreeModel import TreeModel as tm
 from backend.app.utils import indicators, utility
-from backend.app.utils.indicators import roc_indicator
 
 
 def get_indicators(prices_data, indicators_with_params):
@@ -41,7 +40,12 @@ def get_indicators(prices_data, indicators_with_params):
     for name, params in indicators_with_params.items():
         if name not in indicator_funcs:
             raise ValueError(f"Indicator '{name}' is not supported.")
-        # Always pass prices_data as the first argument, then unpack params
+        # Convert all params to int if possible
+        for k, v in params.items():
+            try:
+                params[k] = int(v)
+            except (ValueError, TypeError):
+                pass
         indi_df = indicator_funcs[name](prices_data, **params)
         indi_df = utility.normalize_indicator(indi_df)
         indicator_mapping[name] = indi_df
@@ -99,7 +103,7 @@ class DecisionTreeTrader(object):
         self.N = n_day_return
         self.YBUY = y_buy + impact
         self.YSELL = y_sell - impact
-        self.learner = bag.BagEnsembleModel(tm.TreeModel, kwargs={"leaf_size": leaf_size}, bags=num_bags)
+        self.learner = bag(tm, kwargs={"leaf_size": leaf_size}, bags=num_bags)
 
     
     def train_model(

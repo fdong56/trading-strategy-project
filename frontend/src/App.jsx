@@ -1,5 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // Supported indicators and their parameter schemas
 const INDICATOR_OPTIONS = [
@@ -70,8 +92,8 @@ function App() {
   const [selectedModel, setSelectedModel] = useState('DecisionTreeTrader');
   const [config, setConfig] = useState({
     symbol: '',
-    start_date: '',
-    end_date: '',
+    start_date: '2008-01-01',
+    end_date: '2009-01-01',
     impact: '',
     commission: '',
     start_val: '',
@@ -99,6 +121,7 @@ function App() {
     }
   });
   const [trainingResult, setTrainingResult] = useState(null);
+  const [plotData, setPlotData] = useState(null);
 
   useEffect(() => {
     fetch('http://localhost:8000/api/symbols')
@@ -168,32 +191,115 @@ function App() {
     return result;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const indicators_with_params = buildIndicatorsWithParams();
-    // Example POST to backend (uncomment and adjust as needed):
-    /*
-    fetch('/api/train', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model_type: selectedModel,
-        qlearning_config: selectedModel === 'QLearningTrader' ? config : undefined,
-        decision_tree_config: selectedModel === 'DecisionTreeTrader' ? config : undefined,
-        indicators_with_params
-      })
-    })
-      .then(res => res.json())
-      .then(data => setTrainingResult(data))
-      .catch(err => setTrainingResult({ message: 'Training failed', error: err.toString() }));
-    */
-    // For now, just show the config and indicators as a mock result
-    setTrainingResult({
-      message: 'Training simulated (replace with real API call)',
-      model: selectedModel,
-      config,
-      indicators_with_params
-    });
+    
+    // Create a copy of config with properly formatted dates
+    const formattedConfig = {
+      ...config,
+      start_date: new Date(config.start_date).toISOString(),
+      end_date: new Date(config.end_date).toISOString()
+    };
+    
+    try {
+      // Train the model
+      const trainResponse = await fetch('http://localhost:8000/api/train', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_type: selectedModel,
+          qlearning_config: selectedModel === 'QLearningTrader' ? formattedConfig : null,
+          decision_tree_config: selectedModel === 'DecisionTreeTrader' ? formattedConfig : null,
+          indicators_with_params
+        })
+      });
+      
+      if (!trainResponse.ok) {
+        const errorData = await trainResponse.json();
+        // Handle FastAPI validation errors
+        if (errorData.detail) {
+          if (Array.isArray(errorData.detail)) {
+            // Format validation errors
+            const errorMessages = errorData.detail.map(err => 
+              `${err.loc[err.loc.length - 1]}: ${err.msg}`
+            ).join('\n');
+            throw new Error(`Validation errors:\n${errorMessages}`);
+          } else {
+            throw new Error(errorData.detail);
+          }
+        }
+        throw new Error('Training failed');
+      }
+      
+      const trainResult = await trainResponse.json();
+      setTrainingResult(trainResult);
+
+      // Get plot data
+      const plotResponse = await fetch('http://localhost:8000/api/plot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_type: selectedModel,
+          qlearning_config: selectedModel === 'QLearningTrader' ? formattedConfig : null,
+          decision_tree_config: selectedModel === 'DecisionTreeTrader' ? formattedConfig : null,
+          indicators_with_params
+        })
+      });
+
+      if (!plotResponse.ok) {
+        const errorData = await plotResponse.json();
+        if (errorData.detail) {
+          if (Array.isArray(errorData.detail)) {
+            const errorMessages = errorData.detail.map(err => 
+              `${err.loc[err.loc.length - 1]}: ${err.msg}`
+            ).join('\n');
+            throw new Error(`Validation errors:\n${errorMessages}`);
+          } else {
+            throw new Error(errorData.detail);
+          }
+        }
+        throw new Error('Failed to get plot data');
+      }
+
+      const plotResult = await plotResponse.json();
+      setPlotData(plotResult);
+    } catch (error) {
+      console.error('Error:', error);
+      setTrainingResult({ 
+        message: 'Error occurred', 
+        error: error.message || error.toString() 
+      });
+    }
+  };
+
+  // Chart options
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Model Performance vs Benchmark'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: 'Normalized Portfolio Value'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Date'
+        }
+      }
+    }
   };
 
   return (
@@ -363,9 +469,35 @@ function App() {
             <div className="result-section">
               <h3>🧠 Training Result</h3>
               {trainingResult ? (
-                <pre style={{ background: '#f4f4f4', padding: '1em', borderRadius: '8px', overflowX: 'auto' }}>
-                  {JSON.stringify(trainingResult, null, 2)}
-                </pre>
+                <>
+                  <pre style={{ background: '#f4f4f4', padding: '1em', borderRadius: '8px', overflowX: 'auto' }}>
+                    {JSON.stringify(trainingResult, null, 2)}
+                  </pre>
+                  {plotData && (
+                    <div style={{ marginTop: '20px', background: 'white', padding: '20px', borderRadius: '8px' }}>
+                      <Line
+                        data={{
+                          labels: plotData.dates,
+                          datasets: [
+                            {
+                              label: 'Model Performance',
+                              data: plotData.model_values,
+                              borderColor: 'rgb(75, 192, 192)',
+                              tension: 0.1
+                            },
+                            {
+                              label: 'Benchmark',
+                              data: plotData.benchmark_values,
+                              borderColor: 'rgb(255, 99, 132)',
+                              tension: 0.1
+                            }
+                          ]
+                        }}
+                        options={chartOptions}
+                      />
+                    </div>
+                  )}
+                </>
               ) : (
                 <span style={{ color: '#888' }}>No training result yet.</span>
               )}
