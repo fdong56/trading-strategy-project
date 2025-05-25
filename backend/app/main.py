@@ -3,15 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Dict, List, Optional
-import pandas as pd
 import sys
 import os
-from utils import utility
-from models.QLearningTrader import QLearningTrader
-from models.DecisionTreeTrader import DecisionTreeTrader
-
-# Add the parent directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from backend.app.models.QLearningTrader import QLearningTrader
+from backend.app.models.DecisionTreeTrader import DecisionTreeTrader
+import glob
 
 # Store for trained models
 trained_models: Dict[str, object] = {}
@@ -197,11 +194,20 @@ async def test_model(config: ModelConfig):
 
         # Convert trades DataFrame to dict for JSON response
         trades_dict = trades.to_dict(orient='records')
-        
+
         return {
             "message": f"Successfully tested {config.model_type}",
             "trades": trades_dict
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/symbols")
+async def get_symbols():
+    """
+    Return a sorted list of all available stock symbols (from CSV files in data/).
+    """
+    csv_files = glob.glob("data/**/*.csv", recursive=True)
+    symbols = sorted({os.path.splitext(os.path.basename(f))[0] for f in csv_files})
+    return {"symbols": symbols} 

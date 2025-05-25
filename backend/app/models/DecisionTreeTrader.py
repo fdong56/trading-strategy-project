@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import datetime
-from .BagEnsembleModel import BagEnsembleModel as bag
-from .TreeModel import TreeModel as tm
-from ..utils import indicators, utility
+from backend.app.models.BagEnsembleModel import BagEnsembleModel as bag
+from backend.app.models.TreeModel import TreeModel as tm
+from backend.app.utils import indicators, utility
+from backend.app.utils.indicators import roc_indicator
 
 
 def get_indicators(prices_data, indicators_with_params):

@@ -123,3 +123,55 @@ footer {
   color: #6b7280;
   background: #f0f4f8;
 }
+
+.row-sections {
+  display: flex;
+  gap: 32px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .row-sections {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 32px;
+  width: 100%;
+}
+
+.stock-section { grid-column: 1; grid-row: 1; background: white; border-radius: 12px; padding: 24px; }
+.indicators-section { grid-column: 2; grid-row: 1; background: white; border-radius: 12px; padding: 24px; }
+.model-section { grid-column: 1; grid-row: 2; background: white; border-radius: 12px; padding: 24px; }
+.result-section { grid-column: 2; grid-row: 2; background: #f6f8fa; border-radius: 12px; padding: 24px; }
+
+@media (max-width: 900px) {
+  .main-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .stock-section, .indicators-section, .model-section, .result-section {
+    margin-bottom: 24px;
+  }
+}
+
+/* Optionally remove .card and .section styling if not used anymore */
+.card {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  min-width: 0;
+}
+.section {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
