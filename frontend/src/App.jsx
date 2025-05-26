@@ -89,14 +89,14 @@ function App() {
     symbol: 'JPM',
     start_date: '2008-01-01',
     end_date: '2009-01-01',
-    impact: '',
-    commission: '',
-    start_val: '',
-    n_day_return: '',
-    y_buy: '',
-    y_sell: '',
-    leaf_size: '',
-    num_bags: '',
+    impact: '0.005',
+    commission: '9.95',
+    start_val: '100000',
+    n_day_return: '5',
+    y_buy: '0.008',
+    y_sell: '-0.008',
+    leaf_size: '6',
+    num_bags: '10',
   });
   const [stockSymbols, setStockSymbols] = useState([]);
   const [selectedIndicators, setSelectedIndicators] = useState([

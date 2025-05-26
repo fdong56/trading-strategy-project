@@ -72,18 +72,6 @@ class ModelResponse(BaseModel):
     parameters: Dict
     description: str
 
-class TrainRequest(BaseModel):
-    model_type: str
-    qlearning_config: Optional[Dict[str, Any]] = None
-    decision_tree_config: Optional[Dict[str, Any]] = None
-    indicators_with_params: Dict[str, Dict[str, Any]]
-
-class PlotRequest(BaseModel):
-    model_type: str
-    qlearning_config: Optional[Dict[str, Any]] = None
-    decision_tree_config: Optional[Dict[str, Any]] = None
-    indicators_with_params: Dict[str, Dict[str, Any]]
-
 @app.get("/")
 async def root():
     """Root endpoint returning API information"""
@@ -120,114 +108,74 @@ async def list_models():
         )
     ]
 
-# Helper function to select and instantiate the model
-def get_model_and_config(request: TrainRequest):
-    if request.model_type == "QLearningTrader":
-        if not request.qlearning_config:
-            raise HTTPException(status_code=400, detail="QLearning configuration is required")
-        model = QLearningTrader(
-            impact=request.qlearning_config["impact"],
-            commission=request.qlearning_config["commission"],
-            bins=request.qlearning_config["bins"],
-            alpha=request.qlearning_config["alpha"],
-            gamma=request.qlearning_config["gamma"],
-            rar=request.qlearning_config["rar"],
-            radr=request.qlearning_config["radr"],
-            dyna=request.qlearning_config["dyna"]
-        )
-        base_config = request.qlearning_config
-    elif request.model_type == "RandomForestTrader":
-        if not request.decision_tree_config:
-            raise HTTPException(status_code=400, detail="Random Forest configuration is required")
-        model = RandomForestTrader(
-            impact=request.decision_tree_config["impact"],
-            commission=request.decision_tree_config["commission"],
-            n_day_return=request.decision_tree_config["n_day_return"],
-            y_buy=request.decision_tree_config["y_buy"],
-            y_sell=request.decision_tree_config["y_sell"],
-            leaf_size=request.decision_tree_config["leaf_size"],
-            num_bags=request.decision_tree_config["num_bags"]
-        )
-        base_config = request.decision_tree_config
-    else:
-        raise HTTPException(status_code=400, detail="Invalid model type")
-    return model, base_config
-
-
-def handle_api_exception(e, endpoint_name):
-    print(f"EXCEPTION in {endpoint_name}:", e, flush=True)
-    traceback.print_exc()
-    raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/api/train")
-async def train_model(request: TrainRequest):
+async def train_model(config: ModelConfig):
     try:
-        model, base_config = get_model_and_config(request)
+        model, base_config = get_model_and_config(config)
         # Train the model
         model.train_model(
-            symbol=base_config["symbol"],
-            sd=base_config["start_date"],
-            ed=base_config["end_date"],
-            sv=base_config["start_val"],
-            indicators_with_params=request.indicators_with_params
+            symbol=base_config.symbol,
+            sd=base_config.start_date,
+            ed=base_config.end_date,
+            sv=base_config.start_val,
+            indicators_with_params=config.indicators_with_params
         )
         # Store the trained model
-        trained_models[request.model_type] = model
-        return {"message": f"Successfully trained {request.model_type}"}
+        trained_models[config.model_type] = model
+        return {"message": f"Successfully trained {config.model_type}"}
     except Exception as e:
         handle_api_exception(e, "/api/train")
         return None
 
 
 @app.post("/api/test")
-async def test_model(request: TrainRequest):
+async def test_model(config: ModelConfig):
     try:
-        if request.model_type not in trained_models:
-            raise HTTPException(status_code=400, detail=f"Model {request.model_type} has not been trained yet")
-        model = trained_models[request.model_type]
+        if config.model_type not in trained_models:
+            raise HTTPException(status_code=400, detail=f"Model {config.model_type} has not been trained yet")
+        model = trained_models[config.model_type]
         # Test the model
-        base_config = request.qlearning_config if request.model_type == "QLearningTrader" else request.decision_tree_config
-        trades = model.test_model(symbol=base_config["symbol"],
-                                sd=base_config["start_date"],
-                                ed=base_config["end_date"]
-        )
-        return {"trades": trades.to_dict()}
+        base_config = config.qlearning_config if config.model_type == "QLearningTrader" else config.decision_tree_config
+        trades = model.test_model(symbol=base_config.symbol, sd=base_config.start_date, ed=base_config.end_date)
+        return trades
     except Exception as e:
         handle_api_exception(e, "/api/test")
         return None
 
 
 @app.post("/api/plot")
-async def plot_model(request: PlotRequest):
+async def plot_model(config: ModelConfig):
     try:
         # Get model trades using test_model endpoint
-        trades_model = await test_model(request)
+        trades_model = await test_model(config)
         # Get the base config values
-        base_config = request.qlearning_config if request.model_type == "QLearningTrader" else request.decision_tree_config
+        base_config = config.qlearning_config if config.model_type == "QLearningTrader" else config.decision_tree_config
         # Get benchmark trades
         trades_benchmark = trades_model.copy()
         trades_benchmark.iloc[:, :] = 0.0
         trades_benchmark.iloc[0, 0] = 1000
         # Compute portfolio value
         portvals_benchmark = compute_portvals(trades_benchmark,
-                                              start_val=base_config["start_val"],
-                                              commission=base_config["commission"],
-                                              impact=base_config["impact"],
-                                              symbol=base_config["symbol"])
+                                              start_val=base_config.start_val,
+                                              commission=base_config.commission,
+                                              impact=base_config.impact,
+                                              symbol=base_config.symbol)
         portvals_benchmark_normalized = portvals_benchmark / portvals_benchmark.iloc[0]
+
         portvals_model = compute_portvals(trades_model,
-                                        start_val=base_config["start_val"],
-                                        commission=base_config["commission"],
-                                        impact=base_config["impact"],
-                                        symbol=base_config["symbol"])
+                                        start_val=base_config.start_val,
+                                        commission=base_config.commission,
+                                        impact=base_config.impact,
+                                        symbol=base_config.symbol)
         portvals_model_normalized = portvals_model / portvals_model.iloc[0]
+
         # Convert trades to plot data
         plot_data = {
             "dates": trades_model.index.tolist(),
             "model_values": portvals_model_normalized[portvals_model_normalized.columns[0]].tolist(),
             "benchmark_values": portvals_benchmark_normalized[portvals_benchmark_normalized.columns[0]].tolist(),
-            "symbol": base_config["symbol"]
+            "symbol": base_config.symbol
         }
         return plot_data
     except Exception as e:
@@ -270,3 +218,44 @@ async def get_price_data(symbol: str, start_date: str, end_date: str):
     except Exception as e:
         handle_api_exception(e, "/api/price")
         return None
+
+
+
+# Helper function to select and instantiate the model
+def get_model_and_config(config: ModelConfig):
+    if config.model_type == "QLearningTrader":
+        if not config.qlearning_config:
+            raise HTTPException(status_code=400, detail="QLearning configuration is required")
+        base_config = config.qlearning_config
+        model = QLearningTrader(
+            impact=base_config.impact,
+            commission=base_config.commission,
+            bins=base_config.bins,
+            alpha=base_config.alpha,
+            gamma=base_config.gamma,
+            rar=base_config.rar,
+            radr=base_config.radr,
+            dyna=base_config.dyna
+        )
+    elif config.model_type == "RandomForestTrader":
+        if not config.decision_tree_config:
+            raise HTTPException(status_code=400, detail="Random Forest configuration is required")
+        base_config = config.decision_tree_config
+        model = RandomForestTrader(
+            impact=base_config.impact,
+            commission=base_config.commission,
+            n_day_return=base_config.n_day_return,
+            y_buy=base_config.y_buy,
+            y_sell=base_config.y_sell,
+            leaf_size=base_config.leaf_size,
+            num_bags=base_config.num_bags
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Invalid model type")
+    return model, base_config
+
+
+def handle_api_exception(e, endpoint_name):
+    print(f"EXCEPTION in {endpoint_name}:", e, flush=True)
+    traceback.print_exc()
+    raise HTTPException(status_code=500, detail=str(e))
