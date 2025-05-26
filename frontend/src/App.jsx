@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Line } from 'react-chartjs-2';
 import StockSection from './components/StockSection';
+import IndicatorsSection from './components/IndicatorsSection';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -304,48 +305,13 @@ function App() {
               config={config}
               handleConfigChange={handleConfigChange}
             />
-            <div className="indicators-section">
-              <h3>📊 Indicators</h3>
-              {[0, 1, 2].map(idx => (
-                <div key={idx} style={{ marginBottom: 16 }}>
-                  <label style={{ fontWeight: 'bold', fontSize: '1.08rem', color: '#1f2937' }}>Select Indicator {idx + 1}</label>
-                  <select
-                    value={selectedIndicators[idx]}
-                    onChange={e => handleIndicatorSelect(idx, e.target.value)}
-                    required
-                  >
-                    <option value="">Select indicator</option>
-                    {INDICATOR_OPTIONS.filter(opt => !selectedIndicators.includes(opt.key) || selectedIndicators[idx] === opt.key).map(opt => (
-                      <option key={opt.key} value={opt.key}>{opt.label}</option>
-                    ))}
-                  </select>
-                  {selectedIndicators[idx] && (() => {
-                    const params = INDICATOR_OPTIONS.find(opt => opt.key === selectedIndicators[idx]).params;
-                    const rows = [];
-                    for (let i = 0; i < params.length; i += 3) {
-                      rows.push(
-                        <div className="date-row" key={`indi-row-${idx}-${i}`}>
-                          {params.slice(i, i + 3).map(param => (
-                            <div key={param.key} style={{ marginLeft: 12 }}>
-                              <label style={{ fontStyle: 'italic', fontWeight: 'normal' }}>{param.label}</label>
-                              <input
-                                className="param-input"
-                                type={param.type}
-                                placeholder={param.placeholder}
-                                value={indicatorParams[selectedIndicators[idx]]?.[param.key] || ''}
-                                onChange={e => handleIndicatorParamChange(selectedIndicators[idx], param.key, e.target.value)}
-                                required
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return rows;
-                  })()}
-                </div>
-              ))}
-            </div>
+            <IndicatorsSection
+              selectedIndicators={selectedIndicators}
+              indicatorParams={indicatorParams}
+              handleIndicatorSelect={handleIndicatorSelect}
+              handleIndicatorParamChange={handleIndicatorParamChange}
+              INDICATOR_OPTIONS={INDICATOR_OPTIONS}
+            />
             <div className="model-section">
               <h3>🧠 Model</h3>
               <label htmlFor="model">Choose ML Model</label>

@@ -209,7 +209,7 @@ async def get_price_data(symbol: str, start_date: str, end_date: str):
         df = pd.read_csv(file_path)
         df['Date'] = pd.to_datetime(df['Date'])
         mask = (df['Date'] >= start_date) & (df['Date'] <= end_date)
-        filtered_df = df.loc[mask]
+        filtered_df = df.loc[mask].sort_values('Date')
         
         return {
             "dates": filtered_df['Date'].dt.strftime('%Y-%m-%d').tolist(),
