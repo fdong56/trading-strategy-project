@@ -66,7 +66,7 @@ const INDICATOR_OPTIONS = [
 ];
 
 const MODEL_CONFIGS = {
-  DecisionTreeTrader: [
+  RandomForestTrader: [
     { key: 'n_day_return', label: 'N day return', type: 'number', placeholder: 'e.g. 5' },
     { key: 'y_buy', label: 'Y Buy', type: 'number', placeholder: 'e.g. 0.008', step: '0.001' },
     { key: 'y_sell', label: 'Y Sell', type: 'number', placeholder: 'e.g. -0.008', step: '0.001' },
@@ -84,7 +84,7 @@ const MODEL_CONFIGS = {
 };
 
 function App() {
-  const [selectedModel, setSelectedModel] = useState('DecisionTreeTrader');
+  const [selectedModel, setSelectedModel] = useState('RandomForestTrader');
   const [config, setConfig] = useState({
     symbol: '',
     start_date: '2008-01-01',
@@ -205,7 +205,7 @@ function App() {
         body: JSON.stringify({
           model_type: selectedModel,
           qlearning_config: selectedModel === 'QLearningTrader' ? formattedConfig : null,
-          decision_tree_config: selectedModel === 'DecisionTreeTrader' ? formattedConfig : null,
+          decision_tree_config: selectedModel === 'RandomForestTrader' ? formattedConfig : null,
           indicators_with_params
         })
       });
@@ -237,7 +237,7 @@ function App() {
         body: JSON.stringify({
           model_type: selectedModel,
           qlearning_config: selectedModel === 'QLearningTrader' ? formattedConfig : null,
-          decision_tree_config: selectedModel === 'DecisionTreeTrader' ? formattedConfig : null,
+          decision_tree_config: selectedModel === 'RandomForestTrader' ? formattedConfig : null,
           indicators_with_params
         })
       });
@@ -436,7 +436,7 @@ function App() {
                 onChange={handleModelChange}
                 required
               >
-                <option value="DecisionTreeTrader">Random Forest</option>
+                <option value="RandomForestTrader">Random Forest</option>
                 <option value="QLearningTrader">Q Learning</option>
               </select>
               <br />

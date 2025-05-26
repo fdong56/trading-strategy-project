@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 import datetime
+from backend.app.utils import indicators, utility
 from backend.app.models.BagEnsembleModel import BagEnsembleModel as bag
 from backend.app.models.TreeModel import TreeModel as tm
-from backend.app.utils import indicators, utility
 
 
 def get_indicators(prices_data, indicators_with_params):
@@ -62,9 +62,9 @@ def get_indicators(prices_data, indicators_with_params):
     return indi_df
 
 
-class DecisionTreeTrader(object):
+class RandomForestTrader(object):
     """
-    A trading system that uses an ensemble of decision trees to make trading decisions.
+    A trading system that uses a Random Forest (ensemble of random trees) to make trading decisions.
     The system uses technical indicators (Bollinger Bands, RSI, and Golden/Death Cross)
     to predict future price movements and generate trading signals.
 
@@ -83,7 +83,7 @@ class DecisionTreeTrader(object):
     leaf_size : int, optional
         Maximum number of samples at leaf nodes in the decision tree, defaults to 6
     num_bags : int, optional
-        Number of trees in the ensemble, defaults to 10
+        Number of trees in the forest, defaults to 10
     """
 
     # Constructor
