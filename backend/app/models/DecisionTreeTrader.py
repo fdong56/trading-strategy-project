@@ -111,6 +111,7 @@ class DecisionTreeTrader(object):
             symbol="IBM",
             sd=datetime.datetime(2008, 1, 1),
             ed=datetime.datetime(2009, 1, 1),
+            sv=100000,
             indicators_with_params=None
     ):
         """

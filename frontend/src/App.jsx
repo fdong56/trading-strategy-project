@@ -83,11 +83,6 @@ const MODEL_CONFIGS = {
   ],
 };
 
-// List of stock symbols from data/ directory
-const STOCK_SYMBOLS = [
-  "ZMH", "XTO", "XYL", "YHOO", "YUM", "ZION", "XLNX", "XOM", "XRAY", "XRX", "WYN", "WYNN", "X", "XEL", "XL", "WPX", "WU", "WWY", "WY", "WYE", "WMB", "WMT", "WPI", "WPO", "WHR", "WIN", "WLP", "WM", "WEN", "WFC", "WFM", "WFR", "WFT", "WAT", "WB", "WDC", "WEC", "VRSN", "VTR", "VZ", "WAG", "WAMUQ", "VIAB", "VLO", "VMC", "VNO", "UTX", "V", "VAR", "VFC", "VIA.B", "UNP", "UPS", "URBN", "USB", "UST", "TYC", "UIS", "UNH", "UNM", "TWC", "TWX", "TXN", "TXT", "TROW", "TRV", "TSN", "TSO", "TSS", "TMO", "TRIP", "TJX", "TLAB", "TMK", "TGT", "THC", "TIE", "TIF", "TE", "TEG", "TEL", "TER", "TEX", "SYMC", "SYY", "T", "TAP", "TDC", "SWK", "SWN", "SWY", "SYK", "STX", "STZ", "SUN", "SVU", "STI", "STJ"
-];
-
 function App() {
   const [selectedModel, setSelectedModel] = useState('DecisionTreeTrader');
   const [config, setConfig] = useState({
@@ -279,6 +274,10 @@ function App() {
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          usePointStyle: true,
+          pointStyle: 'line'
+        }
       },
       title: {
         display: true,
@@ -297,6 +296,12 @@ function App() {
         title: {
           display: true,
           text: 'Date'
+        },
+        ticks: {
+          callback: function(value, index, values) {
+            const date = new Date(this.getLabelForValue(value));
+            return date.toISOString().split('T')[0];
+          }
         }
       }
     }
@@ -468,36 +473,31 @@ function App() {
             </div>
             <div className="result-section">
               <h3>🧠 Training Result</h3>
-              {trainingResult ? (
-                <>
-                  <pre style={{ background: '#f4f4f4', padding: '1em', borderRadius: '8px', overflowX: 'auto' }}>
-                    {JSON.stringify(trainingResult, null, 2)}
-                  </pre>
-                  {plotData && (
-                    <div style={{ marginTop: '20px', background: 'white', padding: '20px', borderRadius: '8px' }}>
-                      <Line
-                        data={{
-                          labels: plotData.dates,
-                          datasets: [
-                            {
-                              label: 'Model Performance',
-                              data: plotData.model_values,
-                              borderColor: 'rgb(75, 192, 192)',
-                              tension: 0.1
-                            },
-                            {
-                              label: 'Benchmark',
-                              data: plotData.benchmark_values,
-                              borderColor: 'rgb(255, 99, 132)',
-                              tension: 0.1
-                            }
-                          ]
-                        }}
-                        options={chartOptions}
-                      />
-                    </div>
-                  )}
-                </>
+              {plotData ? (
+                <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
+                  <Line
+                    data={{
+                      labels: plotData.dates,
+                      datasets: [
+                        {
+                          label: 'Model Performance',
+                          data: plotData.model_values,
+                          borderColor: 'rgb(75, 192, 192)',
+                          tension: 0.1,
+                          pointRadius: 0
+                        },
+                        {
+                          label: 'Benchmark',
+                          data: plotData.benchmark_values,
+                          borderColor: 'rgb(255, 99, 132)',
+                          tension: 0.1,
+                          pointRadius: 0
+                        }
+                      ]
+                    }}
+                    options={chartOptions}
+                  />
+                </div>
               ) : (
                 <span style={{ color: '#888' }}>No training result yet.</span>
               )}

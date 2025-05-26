@@ -31,7 +31,7 @@ class QLearningTrader(object):
         self.learner = None
         self.bins = bins
         states_amount = (bins - 1) * 111 + 1
-        self.learner = ql.QLearner(
+        self.learner = ql(
             num_states=states_amount,
             num_actions=3,
             alpha=alpha,
@@ -107,8 +107,7 @@ class QLearningTrader(object):
         self,
         symbol="IBM",
         sd=datetime.datetime(2009, 1, 1),
-        ed=datetime.datetime(2010, 1, 1),
-        sv=100000
+        ed=datetime.datetime(2010, 1, 1)
     ):
         """
         Test the trained model using the same indicators and parameters as in training.
@@ -173,6 +172,8 @@ class QLearningTrader(object):
         for name, params in indicators_with_params.items():
             if name not in indicator_funcs:
                 raise ValueError(f"Indicator '{name}' is not supported.")
+            # Convert all parameters to integers
+            params = {k: int(v) for k, v in params.items()}
             df = indicator_funcs[name](prices_data, **params)
             indicator_dfs.append(df)
         indi_states = self.discretize(*indicator_dfs)
