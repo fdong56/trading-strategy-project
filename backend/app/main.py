@@ -12,6 +12,7 @@ import glob
 from backend.app.utils.utility import compute_portvals  # Add this import at the top
 import logging
 import traceback
+import pandas as pd
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -245,4 +246,27 @@ async def get_symbols():
         return {"symbols": symbols}
     except Exception as e:
         handle_api_exception(e, "/api/symbols")
+        return None
+
+@app.get("/api/price")
+async def get_price_data(symbol: str, start_date: str, end_date: str):
+    """
+    Return price data for a specified symbol and date range.
+    """
+    try:
+        file_path = f"data/{symbol}.csv"
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail=f"Symbol {symbol} not found")
+        
+        df = pd.read_csv(file_path)
+        df['Date'] = pd.to_datetime(df['Date'])
+        mask = (df['Date'] >= start_date) & (df['Date'] <= end_date)
+        filtered_df = df.loc[mask]
+        
+        return {
+            "dates": filtered_df['Date'].dt.strftime('%Y-%m-%d').tolist(),
+            "prices": filtered_df['Close'].tolist()
+        }
+    except Exception as e:
+        handle_api_exception(e, "/api/price")
         return None

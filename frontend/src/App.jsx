@@ -86,7 +86,7 @@ const MODEL_CONFIGS = {
 function App() {
   const [selectedModel, setSelectedModel] = useState('RandomForestTrader');
   const [config, setConfig] = useState({
-    symbol: '',
+    symbol: 'JPM',
     start_date: '2008-01-01',
     end_date: '2009-01-01',
     impact: '',
@@ -117,6 +117,7 @@ function App() {
   });
   const [trainingResult, setTrainingResult] = useState(null);
   const [plotData, setPlotData] = useState(null);
+  const [priceData, setPriceData] = useState(null);
 
   useEffect(() => {
     fetch('http://localhost:8000/api/symbols')
@@ -132,6 +133,19 @@ function App() {
         setStockSymbols([]);
       });
   }, []);
+
+  // Fetch price data for the selected symbol and date range
+  useEffect(() => {
+    if (config.symbol && config.start_date && config.end_date) {
+      fetch(`http://localhost:8000/api/price?symbol=${config.symbol}&start_date=${config.start_date}&end_date=${config.end_date}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch price data');
+          return res.json();
+        })
+        .then(data => setPriceData(data))
+        .catch(() => setPriceData(null));
+    }
+  }, [config.symbol, config.start_date, config.end_date]);
 
   // Handle model config changes
   const handleConfigChange = (field, value) => {
@@ -336,6 +350,7 @@ function App() {
                     type="date"
                     id="start"
                     value={config.start_date}
+                    min="2000-02-01"
                     onChange={e => handleConfigChange('start_date', e.target.value)}
                     required
                   />
@@ -346,12 +361,49 @@ function App() {
                     type="date"
                     id="end"
                     value={config.end_date}
+                    max="2012-09-12"
                     onChange={e => handleConfigChange('end_date', e.target.value)}
                     required
                   />
                 </div>
               </div>
-              <div className="chart-placeholder" title="Mock stock chart"></div>
+              {priceData && priceData.dates && priceData.prices && (
+                <div style={{ background: 'white', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+                  <Line
+                    data={{
+                      labels: priceData.dates,
+                      datasets: [
+                        {
+                          label: `${config.symbol} Price`,
+                          data: priceData.prices,
+                          borderColor: 'rgb(54, 162, 235)',
+                          tension: 0.1,
+                          pointRadius: 0
+                        }
+                      ]
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: `${config.symbol} Price`, font: { size: 16, weight: 'bold' } }
+                      },
+                      scales: {
+                        y: { title: { display: true, text: 'Price' } },
+                        x: {
+                          title: { display: true, text: 'Date' },
+                          ticks: {
+                            callback: function(value, index, values) {
+                              const date = this.getLabelForValue(value);
+                              return date;
+                            }
+                          }
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              )}
               <div className="date-row">
                 <div>
                   <label htmlFor="impact">Impact</label>
