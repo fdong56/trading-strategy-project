@@ -368,40 +368,49 @@ function App() {
                 </div>
               </div>
               {priceData && priceData.dates && priceData.prices && (
-                <div style={{ background: 'white', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                  <Line
-                    data={{
-                      labels: priceData.dates,
-                      datasets: [
-                        {
-                          label: `${config.symbol} Price`,
-                          data: priceData.prices,
-                          borderColor: 'rgb(54, 162, 235)',
-                          tension: 0.1,
-                          pointRadius: 0
-                        }
-                      ]
-                    }}
-                    options={{
-                      responsive: true,
-                      plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: `${config.symbol} Price`, font: { size: 16, weight: 'bold' } }
-                      },
-                      scales: {
-                        y: { title: { display: true, text: 'Price' } },
-                        x: {
-                          title: { display: true, text: 'Date' },
-                          ticks: {
-                            callback: function(value, index, values) {
-                              const date = this.getLabelForValue(value);
-                              return date;
+                <div style={{ marginTop: 16, marginBottom: 16, border: '1px solid #ccc', borderRadius: '8px' }}>
+                  {priceData ? (
+                    <Line
+                      data={{
+                        labels: priceData.dates,
+                        datasets: [
+                          {
+                            label: `${config.symbol} Price`,
+                            data: priceData.prices,
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            tension: 0.1,
+                            pointRadius: 0
+                          }
+                        ]
+                      }}
+                      options={{
+                        responsive: true,
+                        plugins: {
+                          legend: { display: false },
+                          title: { display: true }
+                        },
+                        scales: {
+                          y: { 
+                            title: { display: true, text: 'Adjusted Price' },
+                            grid: { display: true }
+                          },
+                          x: {
+                            title: { display: true },
+                            grid: { display: false },
+                            ticks: {
+                              callback: function(value, index, values) {
+                                const date = this.getLabelForValue(value);
+                                return date;
+                              }
                             }
                           }
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  ) : (
+                    <div className="chart-placeholder" title="Stock Price Chart"></div>
+                  )}
                 </div>
               )}
               <div className="date-row">
