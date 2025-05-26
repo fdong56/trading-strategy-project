@@ -122,6 +122,21 @@ function App() {
   const [trainingResult, setTrainingResult] = useState(null);
   // benchmark vs trainning data plot
   const [plotData, setPlotData] = useState(null);
+  const [valStartDate, setValStartDate] = useState('2009-01-01');
+  const [valEndDate, setValEndDate] = useState('2010-01-01');
+  const [validationPriceData, setValidationPriceData] = useState(null);
+
+  useEffect(() => {
+    if (config.symbol && valStartDate && valEndDate) {
+      fetch(`http://localhost:8000/api/price?symbol=${config.symbol}&start_date=${valStartDate}&end_date=${valEndDate}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch validation price data');
+          return res.json();
+        })
+        .then(data => setValidationPriceData(data))
+        .catch(() => setValidationPriceData(null));
+    }
+  }, [config.symbol, valStartDate, valEndDate]);
 
   // Handle model config changes
   const handleConfigChange = (field, value) => {
@@ -324,6 +339,11 @@ function App() {
               MODEL_CONFIGS={MODEL_CONFIGS}
             />
             <ValidationSection
+              valStartDate={valStartDate}
+              valEndDate={valEndDate}
+              setValStartDate={setValStartDate}
+              setValEndDate={setValEndDate}
+              validationPriceData={validationPriceData}
               config={config}
             />
             <ResultSection
