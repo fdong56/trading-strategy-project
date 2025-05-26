@@ -1,7 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 
-export default function ValidationSection({ valStartDate, valEndDate, setValStartDate, setValEndDate, validationPriceData, config }) {
+export default function ValidationSection({config }) {
+
+  const [valStartDate, setValStartDate] = useState('2009-01-01');
+  const [valEndDate, setValEndDate] = useState('2010-01-01');
+  const [validationPriceData, setValidationPriceData] = useState(null);
+
+
+  useEffect(() => {
+    if (config.symbol && valStartDate && valEndDate) {
+      fetch(`http://localhost:8000/api/price?symbol=${config.symbol}&start_date=${valStartDate}&end_date=${valEndDate}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch validation price data');
+          return res.json();
+        })
+        .then(data => setValidationPriceData(data))
+        .catch(() => setValidationPriceData(null));
+    }
+  }, [config.symbol, valStartDate, valEndDate]);
+
   return (
     <div className="validation-section" style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #ccc', marginTop: 32 }}>
       <h3>🔍 Validation</h3>
