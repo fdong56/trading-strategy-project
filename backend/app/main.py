@@ -12,11 +12,7 @@ import glob
 from backend.app.utils.utility import compute_portvals  # Add this import at the top
 import logging
 import traceback
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import io
-import base64
+
 logging.basicConfig(level=logging.DEBUG)
 
 # Store for trained models
