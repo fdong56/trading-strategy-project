@@ -43,16 +43,16 @@ class QLearningTrader(object):
   		  	   		 	   			  		 			     			  	 
     # Train the model for trading
     def train_model(
-        self,  		  	   		 	   			  		 			     			  	 
-        symbol="IBM",  		  	   		 	   			  		 			     			  	 
+        self,
+        symbol="IBM",
         sd=datetime.datetime(2008, 1, 1),
         ed=datetime.datetime(2009, 1, 1),
         sv=100000,
         indicators_with_params=None
-    ):  		  	   		 	   			  		 			     			  	 
-        """  		  	   		 	   			  		 			     			  	 
+    ):
+        """
         Train the strategy model over a given time frame using user-specified indicators and parameters.
-  		  	   		 	   			  		 			     			  	 
+
         Parameters
         ----------
         symbol : str
@@ -104,12 +104,12 @@ class QLearningTrader(object):
 
     # Test the model against new data
     def test_model(
-        self,  		  	   		 	   			  		 			     			  	 
-        symbol="IBM",  		  	   		 	   			  		 			     			  	 
+        self,
+        symbol="IBM",
         sd=datetime.datetime(2009, 1, 1),
         ed=datetime.datetime(2010, 1, 1)
-    ):  		  	   		 	   			  		 			     			  	 
-        """  		  	   		 	   			  		 			     			  	 
+    ):
+        """
         Test the trained model using the same indicators and parameters as in training.
 
         Parameters
