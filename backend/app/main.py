@@ -260,8 +260,13 @@ async def get_price_data(symbol: str, start_date: str, end_date: str):
         
         df = pd.read_csv(file_path)
         df['Date'] = pd.to_datetime(df['Date'])
+        start_date = pd.to_datetime(start_date)
+        end_date = pd.to_datetime(end_date)
         mask = (df['Date'] >= start_date) & (df['Date'] <= end_date)
-        filtered_df = df.loc[mask]
+        filtered_df = df.loc[mask].sort_values('Date')  # Sort by date
+        
+        if filtered_df.empty:
+            raise HTTPException(status_code=404, detail=f"No data found for the specified date range")
         
         return {
             "dates": filtered_df['Date'].dt.strftime('%Y-%m-%d').tolist(),
