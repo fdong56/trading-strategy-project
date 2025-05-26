@@ -103,7 +103,6 @@ function App() {
     leaf_size: '',
     num_bags: '',
   });
-  const [stockSymbols, setStockSymbols] = useState([]);
   const [selectedIndicators, setSelectedIndicators] = useState([
     'macd', 'rsi', 'bbp'
   ]);
@@ -121,39 +120,11 @@ function App() {
     }
   });
   const [trainingResult, setTrainingResult] = useState(null);
+  // benchmark vs trainning data plot
   const [plotData, setPlotData] = useState(null);
-  const [priceData, setPriceData] = useState(null);
   const [valStartDate, setValStartDate] = useState('2009-01-01');
   const [valEndDate, setValEndDate] = useState('2010-01-01');
   const [validationPriceData, setValidationPriceData] = useState(null);
-
-  useEffect(() => {
-    fetch('http://localhost:8000/api/symbols')
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => setStockSymbols(data.symbols))
-      .catch(error => {
-        console.error('Error fetching symbols:', error);
-        setStockSymbols([]);
-      });
-  }, []);
-
-  // Fetch price data for the selected symbol and date range
-  useEffect(() => {
-    if (config.symbol && config.start_date && config.end_date) {
-      fetch(`http://localhost:8000/api/price?symbol=${config.symbol}&start_date=${config.start_date}&end_date=${config.end_date}`)
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to fetch price data');
-          return res.json();
-        })
-        .then(data => setPriceData(data))
-        .catch(() => setPriceData(null));
-    }
-  }, [config.symbol, config.start_date, config.end_date]);
 
   useEffect(() => {
     if (config.symbol && valStartDate && valEndDate) {
@@ -351,9 +322,7 @@ function App() {
           <div className="main-grid">
             <StockSection
               config={config}
-              stockSymbols={stockSymbols}
               handleConfigChange={handleConfigChange}
-              priceData={priceData}
             />
             <IndicatorsSection
               selectedIndicators={selectedIndicators}

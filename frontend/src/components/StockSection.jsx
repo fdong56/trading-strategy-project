@@ -1,7 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 
-export default function StockSection({ config, stockSymbols, handleConfigChange, priceData }) {
+export default function StockSection({ config, handleConfigChange }) {
+  const [stockSymbols, setStockSymbols] = useState([]);
+  const [priceData, setPriceData] = useState(null);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/symbols')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => setStockSymbols(data.symbols))
+      .catch(error => {
+        console.error('Error fetching symbols:', error);
+        setStockSymbols([]);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (config.symbol && config.start_date && config.end_date) {
+      fetch(`http://localhost:8000/api/price?symbol=${config.symbol}&start_date=${config.start_date}&end_date=${config.end_date}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch price data');
+          return res.json();
+        })
+        .then(data => setPriceData(data))
+        .catch(() => setPriceData(null));
+    }
+  }, [config.symbol, config.start_date, config.end_date]);
+
   return (
     <div className="stock-section">
       <h3>📈 Stock</h3>
