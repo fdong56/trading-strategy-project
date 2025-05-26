@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Line } from 'react-chartjs-2';
+import StockSection from './components/StockSection';
+import IndicatorsSection from './components/IndicatorsSection';
+import ModelSection from './components/ModelSection';
+import ValidationSection from './components/ValidationSection';
+import ResultSection from './components/ResultSection';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -344,340 +349,47 @@ function App() {
       <main>
         <form onSubmit={handleSubmit} style={{ width: '100%' }}>
           <div className="main-grid">
-            <div className="stock-section">
-              <h3>📈 Stock</h3>
-              <label htmlFor="symbol">Stock Symbol</label>
-              <select
-                id="symbol"
-                value={config.symbol}
-                onChange={e => handleConfigChange('symbol', e.target.value)}
-                required
-              >
-                <option value="">Select a symbol</option>
-                {stockSymbols.map(sym => (
-                  <option key={sym} value={sym}>{sym}</option>
-                ))}
-              </select>
-              <div className="date-row">
-                <div>
-                  <label htmlFor="start">Start Date</label>
-                  <input
-                    type="date"
-                    id="start"
-                    value={config.start_date}
-                    min="2000-02-01"
-                    onChange={e => handleConfigChange('start_date', e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="end">End Date</label>
-                  <input
-                    type="date"
-                    id="end"
-                    value={config.end_date}
-                    max="2012-09-12"
-                    onChange={e => handleConfigChange('end_date', e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              {priceData && priceData.dates && priceData.prices && (
-                <div style={{ marginTop: 16, marginBottom: 16, border: '1px solid #ccc', borderRadius: '8px' }}>
-                  {priceData ? (
-                    <Line
-                      data={{
-                        labels: priceData.dates,
-                        datasets: [
-                          {
-                            label: `${config.symbol} Price`,
-                            data: priceData.prices,
-                            borderColor: 'rgb(54, 162, 235)',
-                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                            tension: 0.1,
-                            pointRadius: 0
-                          }
-                        ]
-                      }}
-                      options={{
-                        responsive: true,
-                        plugins: {
-                          legend: { display: false },
-                          title: { display: true }
-                        },
-                        scales: {
-                          y: { 
-                            title: { display: true, text: 'Adjusted Price' },
-                            grid: { display: true }
-                          },
-                          x: {
-                            title: { display: true },
-                            grid: { display: false },
-                            ticks: {
-                              callback: function(value, index, values) {
-                                const date = this.getLabelForValue(value);
-                                return date;
-                              }
-                            }
-                          }
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="chart-placeholder" title="Stock Price Chart"></div>
-                  )}
-                </div>
-              )}
-              <div className="date-row">
-                <div>
-                  <label htmlFor="impact">Impact</label>
-                  <input
-                    type="text"
-                    id="impact"
-                    placeholder="e.g. 0.005"
-                    value={config.impact}
-                    onChange={e => handleConfigChange('impact', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="commission">Commission</label>
-                  <input
-                    type="text"
-                    id="commission"
-                    placeholder="e.g. 9.95"
-                    value={config.commission}
-                    onChange={e => handleConfigChange('commission', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="start-value">Start Value</label>
-                  <input
-                    type="text"
-                    id="start-value"
-                    placeholder="e.g. 100000"
-                    value={config.start_val}
-                    onChange={e => handleConfigChange('start_val', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="indicators-section">
-              <h3>📊 Indicators</h3>
-              {[0, 1, 2].map(idx => (
-                <div key={idx} style={{ marginBottom: 16 }}>
-                  <label style={{ fontWeight: 'bold', fontSize: '1.08rem', color: '#1f2937' }}>Select Indicator {idx + 1}</label>
-                  <select
-                    value={selectedIndicators[idx]}
-                    onChange={e => handleIndicatorSelect(idx, e.target.value)}
-                    required
-                  >
-                    <option value="">Select indicator</option>
-                    {INDICATOR_OPTIONS.filter(opt => !selectedIndicators.includes(opt.key) || selectedIndicators[idx] === opt.key).map(opt => (
-                      <option key={opt.key} value={opt.key}>{opt.label}</option>
-                    ))}
-                  </select>
-                  {selectedIndicators[idx] && (() => {
-                    const params = INDICATOR_OPTIONS.find(opt => opt.key === selectedIndicators[idx]).params;
-                    const rows = [];
-                    for (let i = 0; i < params.length; i += 3) {
-                      rows.push(
-                        <div className="date-row" key={`indi-row-${idx}-${i}`}>
-                          {params.slice(i, i + 3).map(param => (
-                            <div key={param.key} style={{ marginLeft: 12 }}>
-                              <label style={{ fontStyle: 'italic', fontWeight: 'normal' }}>{param.label}</label>
-                              <input
-                                className="param-input"
-                                type={param.type}
-                                placeholder={param.placeholder}
-                                value={indicatorParams[selectedIndicators[idx]]?.[param.key] || ''}
-                                onChange={e => handleIndicatorParamChange(selectedIndicators[idx], param.key, e.target.value)}
-                                required
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return rows;
-                  })()}
-                </div>
-              ))}
-            </div>
-            <div className="model-section">
-              <h3>🧠 Model</h3>
-              <label htmlFor="model">Choose ML Model</label>
-              <select
-                id="model"
-                value={selectedModel}
-                onChange={handleModelChange}
-                required
-              >
-                <option value="RandomForestTrader">Random Forest</option>
-                <option value="QLearningTrader">Q Learning</option>
-              </select>
-              <br />
-              {selectedModel && (
-                <>
-                  {(() => {
-                    const params = MODEL_CONFIGS[selectedModel];
-                    const rows = [];
-                    for (let i = 0; i < params.length; i += 3) {
-                      rows.push(
-                        <div className="date-row" key={`model-row-${i}`}>
-                          {params.slice(i, i + 3).map(param => (
-                            <div key={param.key}>
-                              <label htmlFor={param.key}>{param.label}</label>
-                              <input
-                                className="param-input"
-                                type={param.type}
-                                id={param.key}
-                                placeholder={param.placeholder}
-                                value={config[param.key] || ''}
-                                step={param.step}
-                                onChange={e => handleConfigChange(param.key, e.target.value)}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return rows;
-                  })()}
-                </>
-              )}
-              <button type="submit">🚀 Train Model</button>
-            </div>
-            <div className="result-section">
-              <h3>🧠 Training Result</h3>
-              {plotData ? (
-                <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
-                  <Line
-                    data={{
-                      labels: plotData.dates,
-                      datasets: [
-                        {
-                          label: 'Model Performance',
-                          data: plotData.model_values,
-                          borderColor: 'rgb(75, 192, 192)',
-                          tension: 0.1,
-                          pointRadius: 0
-                        },
-                        {
-                          label: 'Benchmark',
-                          data: plotData.benchmark_values,
-                          borderColor: 'rgb(255, 99, 132)',
-                          tension: 0.1,
-                          pointRadius: 0
-                        }
-                      ]
-                    }}
-                    options={chartOptions}
-                  />
-                </div>
-              ) : (
-                <span style={{ color: '#888' }}>No training result yet.</span>
-              )}
-            </div>
-            <div className="validation-section">
-              <h3>🔍 Validation</h3>
-              <div className="date-row">
-                <div>
-                  <label htmlFor="val-start">Validation Start Date</label>
-                  <input
-                    type="date"
-                    id="val-start"
-                    value={valStartDate}
-                    min="2000-02-01"
-                    max="2012-09-12"
-                    onChange={e => setValStartDate(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="val-end">Validation End Date</label>
-                  <input
-                    type="date"
-                    id="val-end"
-                    value={valEndDate}
-                    min="2000-02-01"
-                    max="2012-09-12"
-                    onChange={e => setValEndDate(e.target.value)}
-                  />
-                </div>
-              </div>
-              {validationPriceData && validationPriceData.dates && validationPriceData.prices && (
-                <div style={{ marginTop: 16, marginBottom: 16, border: '1px solid #ccc', borderRadius: '8px' }}>
-                  <Line
-                    data={{
-                      labels: validationPriceData.dates,
-                      datasets: [
-                        {
-                          label: `${config.symbol} Price`,
-                          data: validationPriceData.prices,
-                          borderColor: 'rgb(54, 162, 235)',
-                          backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                          tension: 0.1,
-                          pointRadius: 0
-                        }
-                      ]
-                    }}
-                    options={{
-                      responsive: true,
-                      plugins: {
-                        legend: { display: false },
-                        title: { display: true }
-                      },
-                      scales: {
-                        y: { 
-                          title: { display: true, text: 'Adjusted Price' },
-                          grid: { display: true }
-                        },
-                        x: {
-                          title: { display: true },
-                          grid: { display: false },
-                          ticks: {
-                            callback: function(value, index, values) {
-                              const date = this.getLabelForValue(value);
-                              return date;
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="validation-result-section">
-              <h3>🧠 Training Result</h3>
-              {plotData ? (
-                <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
-                  <Line
-                    data={{
-                      labels: plotData.dates,
-                      datasets: [
-                        {
-                          label: 'Model Performance',
-                          data: plotData.model_values,
-                          borderColor: 'rgb(75, 192, 192)',
-                          tension: 0.1,
-                          pointRadius: 0
-                        },
-                        {
-                          label: 'Benchmark',
-                          data: plotData.benchmark_values,
-                          borderColor: 'rgb(255, 99, 132)',
-                          tension: 0.1,
-                          pointRadius: 0
-                        }
-                      ]
-                    }}
-                    options={chartOptions}
-                  />
-                </div>
-              ) : (
-                <span style={{ color: '#888' }}>No training result yet.</span>
-              )}
-            </div>
+            <StockSection
+              config={config}
+              stockSymbols={stockSymbols}
+              handleConfigChange={handleConfigChange}
+              priceData={priceData}
+            />
+            <IndicatorsSection
+              selectedIndicators={selectedIndicators}
+              indicatorParams={indicatorParams}
+              handleIndicatorSelect={handleIndicatorSelect}
+              handleIndicatorParamChange={handleIndicatorParamChange}
+              INDICATOR_OPTIONS={INDICATOR_OPTIONS}
+            />
+            <ModelSection
+              selectedModel={selectedModel}
+              handleModelChange={handleModelChange}
+              config={config}
+              handleConfigChange={handleConfigChange}
+              MODEL_CONFIGS={MODEL_CONFIGS}
+            />
+            <ValidationSection
+              valStartDate={valStartDate}
+              valEndDate={valEndDate}
+              setValStartDate={setValStartDate}
+              setValEndDate={setValEndDate}
+              validationPriceData={validationPriceData}
+              config={config}
+            />
+            <ResultSection
+              title="🧠 Training Result"
+              plotData={plotData}
+              chartOptions={chartOptions}
+              emptyMessage="No training result yet."
+            />
+            {/* If you have validation results, you can add another ResultSection for validation */}
+            {/* <ResultSection
+              title="📊 Validation Result"
+              plotData={validationPlotData}
+              chartOptions={chartOptions}
+              emptyMessage="No validation result yet."
+            /> */}
           </div>
         </form>
       </main>
