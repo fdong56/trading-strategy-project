@@ -4,6 +4,8 @@ import StockSection from './components/StockSection';
 import IndicatorsSection from './components/IndicatorsSection';
 import ModelSection from './components/ModelSection';
 import ResultSection from './components/ResultSection';
+import ValidationSection from './components/ValidationSection';
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -323,6 +325,9 @@ function App() {
             <ResultSection
               plotData={plotData}
               chartOptions={chartOptions}
+            />
+            <ValidationSection
+              config={config}
             />
           </div>
         </form>
