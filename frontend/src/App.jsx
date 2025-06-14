@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Line } from 'react-chartjs-2';
 import StockSection from './components/StockSection';
 import IndicatorsSection from './components/IndicatorsSection';
+import ModelSection from './components/ModelSection';
+import ResultSection from './components/ResultSection';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -312,81 +313,19 @@ function App() {
               handleIndicatorParamChange={handleIndicatorParamChange}
               INDICATOR_OPTIONS={INDICATOR_OPTIONS}
             />
-            <div className="model-section">
-              <h3>🧠 Model</h3>
-              <label htmlFor="model">Choose ML Model</label>
-              <select
-                id="model"
-                value={selectedModel}
-                onChange={handleModelChange}
-                required
-              >
-                <option value="RandomForestTrader">Random Forest</option>
-                <option value="QLearningTrader">Q Learning</option>
-              </select>
-              <br />
-              {selectedModel && (
-                <>
-                  {(() => {
-                    const params = MODEL_CONFIGS[selectedModel];
-                    const rows = [];
-                    for (let i = 0; i < params.length; i += 3) {
-                      rows.push(
-                        <div className="date-row" key={`model-row-${i}`}>
-                          {params.slice(i, i + 3).map(param => (
-                            <div key={param.key}>
-                              <label htmlFor={param.key}>{param.label}</label>
-                              <input
-                                className="param-input"
-                                type={param.type}
-                                id={param.key}
-                                placeholder={param.placeholder}
-                                value={config[param.key] || ''}
-                                step={param.step}
-                                onChange={e => handleConfigChange(param.key, e.target.value)}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return rows;
-                  })()}
-                </>
-              )}
-              <button type="submit">🚀 Train Model</button>
-            </div>
-            <div className="result-section">
-              <h3>🧠 Training Result</h3>
-              {plotData ? (
-                <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
-                  <Line
-                    data={{
-                      labels: plotData.dates,
-                      datasets: [
-                        {
-                          label: 'Model Performance',
-                          data: plotData.model_values,
-                          borderColor: 'rgb(75, 192, 192)',
-                          tension: 0.1,
-                          pointRadius: 0
-                        },
-                        {
-                          label: 'Benchmark',
-                          data: plotData.benchmark_values,
-                          borderColor: 'rgb(255, 99, 132)',
-                          tension: 0.1,
-                          pointRadius: 0
-                        }
-                      ]
-                    }}
-                    options={chartOptions}
-                  />
-                </div>
-              ) : (
-                <span style={{ color: '#888' }}>No training result yet.</span>
-              )}
-            </div>
+            <ModelSection
+              selectedModel={selectedModel}
+              handleModelChange={handleModelChange}
+              MODEL_CONFIGS={MODEL_CONFIGS}
+              config={config}
+              handleConfigChange={handleConfigChange}
+            />
+            <ResultSection
+              title="Training Result"
+              plotData={plotData}
+              chartOptions={chartOptions}
+              emptyMessage="No training result yet."
+            />
           </div>
         </form>
       </main>
