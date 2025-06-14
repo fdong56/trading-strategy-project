@@ -321,10 +321,8 @@ function App() {
               handleConfigChange={handleConfigChange}
             />
             <ResultSection
-              title="Training Result"
               plotData={plotData}
               chartOptions={chartOptions}
-              emptyMessage="No training result yet."
             />
           </div>
         </form>
