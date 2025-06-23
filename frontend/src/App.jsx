@@ -4,7 +4,6 @@ import StockSection from './components/StockSection';
 import IndicatorsSection from './components/IndicatorsSection';
 import ModelSection from './components/ModelSection';
 import ResultSection from './components/ResultSection';
-import ValidationSection from './components/ValidationSection';
 
 import {
   Chart as ChartJS,
@@ -325,15 +324,7 @@ function App() {
             <ResultSection
               plotData={plotData}
               chartOptions={chartOptions}
-              className="result-section-training"
-            />
-            <ValidationSection
-              config={config}
-            />
-            <ResultSection
-              plotData={plotData}
-              chartOptions={chartOptions}
-              className="result-section-testing"
+              className="result-section"
             />
           </div>
         </form>

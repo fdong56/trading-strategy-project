@@ -5,6 +5,9 @@ export default function StockSection({ config, handleConfigChange }) {
   const [stockSymbols, setStockSymbols] = useState([]);
   const [priceData, setPriceData] = useState(null);
 
+  const minDate = '2000-02-01';
+  const maxDate = '2012-09-12';
+
   useEffect(() => {
     fetch('http://localhost:8000/api/symbols')
       .then(res => {
@@ -21,8 +24,8 @@ export default function StockSection({ config, handleConfigChange }) {
   }, []);
 
   useEffect(() => {
-    if (config.symbol && config.start_date && config.end_date) {
-      fetch(`http://localhost:8000/api/price?symbol=${config.symbol}&start_date=${config.start_date}&end_date=${config.end_date}`)
+    if (config.symbol) {
+      fetch(`http://localhost:8000/api/price?symbol=${config.symbol}&start_date=${minDate}&end_date=${maxDate}`)
         .then(res => {
           if (!res.ok) throw new Error('Failed to fetch price data');
           return res.json();
@@ -30,7 +33,7 @@ export default function StockSection({ config, handleConfigChange }) {
         .then(data => setPriceData(data))
         .catch(() => setPriceData(null));
     }
-  }, [config.symbol, config.start_date, config.end_date]);
+  }, [config.symbol]);
 
   return (
     <div className="stock-section">
@@ -47,30 +50,7 @@ export default function StockSection({ config, handleConfigChange }) {
           <option key={sym} value={sym}>{sym}</option>
         ))}
       </select>
-      <div className="date-row">
-        <div>
-          <label htmlFor="start">Start Date</label>
-          <input
-            type="date"
-            id="start"
-            value={config.start_date}
-            min="2000-02-01"
-            onChange={e => handleConfigChange('start_date', e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="end">End Date</label>
-          <input
-            type="date"
-            id="end"
-            value={config.end_date}
-            max="2012-09-12"
-            onChange={e => handleConfigChange('end_date', e.target.value)}
-            required
-          />
-        </div>
-      </div>
+      
       {priceData && priceData.dates && priceData.prices && (
         <div style={{ marginTop: 16, marginBottom: 16, border: '1px solid #ccc', borderRadius: '8px' }}>
           {priceData ? (

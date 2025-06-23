@@ -1,7 +1,7 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
 
-export default function ResultSection({ plotData, chartOptions, className = "result-section-training" }) {
+export default function ResultSection({ plotData, chartOptions, className = "result-section" }) {
   return (
     <div className={className}>
       <h3>🧠 Training Result</h3>

@@ -69,7 +69,8 @@ export default function ModelSection({
             type="date"
             id="start"
             value={config.start_date}
-            min="2000-02-01"
+            min={minDate}
+            max={maxDate}
             onChange={e => handleConfigChange('start_date', e.target.value)}
             required
           />
@@ -80,7 +81,8 @@ export default function ModelSection({
             type="date"
             id="end"
             value={config.end_date}
-            max="2012-09-12"
+            min={config.start_date}
+            max={maxDate}
             onChange={e => handleConfigChange('end_date', e.target.value)}
             required
           />
@@ -96,7 +98,7 @@ export default function ModelSection({
             id="val_start"
             value={valStartDate}
             min={minDate}
-            max={valEndDate}
+            max={maxDate}
             onChange={e => setValStartDate(e.target.value)}
           />
         </div>

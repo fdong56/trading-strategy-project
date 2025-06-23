@@ -174,28 +174,10 @@ footer {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.result-section-training { 
+.result-section { 
   grid-column: 2; 
   grid-row: 2; 
   background: #f6f8fa; 
-  border-radius: 12px; 
-  padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.result-section-testing { 
-  grid-column: 2; 
-  grid-row: 3; 
-  background: #f6f8fa; 
-  border-radius: 12px; 
-  padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.validation-section { 
-  grid-column: 1; 
-  grid-row: 3; 
-  background: white; 
   border-radius: 12px; 
   padding: 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -208,7 +190,7 @@ footer {
     gap: 24px;
     padding: 16px;
   }
-  .stock-section, .indicators-section, .model-section, .result-section-testing, .result-section-training {
+  .stock-section, .indicators-section, .model-section, .result-section {
     margin-bottom: 0;
   }
 }
