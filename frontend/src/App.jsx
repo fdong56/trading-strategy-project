@@ -93,6 +93,8 @@ function App() {
     symbol: 'JPM',
     start_date: '2008-01-01',
     end_date: '2009-01-01',
+    test_start_date: '2009-01-01',
+    test_end_date: '2010-01-01',
     impact: '0.005',
     commission: '9.95',
     start_val: '100000',
@@ -118,8 +120,8 @@ function App() {
       lookback: '20'
     }
   });
-  const [trainingResult, setTrainingResult] = useState(null);
-  const [plotData, setPlotData] = useState(null);
+  const [trainPlotData, setTrainPlotData] = useState(null);
+  const [testPlotData, setTestPlotData] = useState(null);
   
   // Handle model config changes
   const handleConfigChange = (field, value) => {
@@ -174,7 +176,8 @@ function App() {
     return result;
   };
 
-  const handleSubmit = async (e) => {
+
+  const handleTrain = async (e) => {
     e.preventDefault();
     const indicators_with_params = buildIndicatorsWithParams();
     
@@ -200,10 +203,8 @@ function App() {
       
       if (!trainResponse.ok) {
         const errorData = await trainResponse.json();
-        // Handle FastAPI validation errors
         if (errorData.detail) {
           if (Array.isArray(errorData.detail)) {
-            // Format validation errors
             const errorMessages = errorData.detail.map(err => 
               `${err.loc[err.loc.length - 1]}: ${err.msg}`
             ).join('\n');
@@ -214,11 +215,8 @@ function App() {
         }
         throw new Error('Training failed');
       }
-      
-      const trainResult = await trainResponse.json();
-      setTrainingResult(trainResult);
 
-      // Get plot data
+      // Get plot data for training
       const plotResponse = await fetch('http://localhost:8000/api/plot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -246,13 +244,56 @@ function App() {
       }
 
       const plotResult = await plotResponse.json();
-      setPlotData(plotResult);
+      setTrainPlotData(plotResult);
     } catch (error) {
       console.error('Error:', error);
-      setTrainingResult({ 
-        message: 'Error occurred', 
-        error: error.message || error.toString() 
+    }
+  };
+
+  const handleTest = async (e) => {
+    e.preventDefault();
+    const indicators_with_params = buildIndicatorsWithParams();
+    
+    // Create a copy of config with test dates
+    const formattedConfig = {
+      ...config,
+      start_date: new Date(config.test_start_date).toISOString(),
+      end_date: new Date(config.test_end_date).toISOString()
+    };
+    
+    try {
+      
+      // Get plot data for testing
+      const plotResponse = await fetch('http://localhost:8000/api/plot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_type: selectedModel,
+          qlearning_config: selectedModel === 'QLearningTrader' ? formattedConfig : null,
+          decision_tree_config: selectedModel === 'RandomForestTrader' ? formattedConfig : null,
+          indicators_with_params
+        })
       });
+
+      if (!plotResponse.ok) {
+        const errorData = await plotResponse.json();
+        if (errorData.detail) {
+          if (Array.isArray(errorData.detail)) {
+            const errorMessages = errorData.detail.map(err => 
+              `${err.loc[err.loc.length - 1]}: ${err.msg}`
+            ).join('\n');
+            throw new Error(`Validation errors:\n${errorMessages}`);
+          } else {
+            throw new Error(errorData.detail);
+          }
+        }
+        throw new Error('Failed to get plot data');
+      }
+
+      const plotResult = await plotResponse.json();
+      setTestPlotData(plotResult);
+    } catch (error) {
+      console.error('Error:', error);
     }
   };
 
@@ -301,7 +342,7 @@ function App() {
         <h1>📊 Trading Strategy Trainer</h1>
       </header>
       <main>
-        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+        <form onSubmit={handleTrain} style={{ width: '100%' }}>
           <div className="main-grid">
             <StockSection
               config={config}
@@ -320,9 +361,12 @@ function App() {
               MODEL_CONFIGS={MODEL_CONFIGS}
               config={config}
               handleConfigChange={handleConfigChange}
+              handleTrain={handleTrain}
+              handleTest={handleTest}
             />
             <ResultSection
-              plotData={plotData}
+              trainPlotData={trainPlotData}
+              testPlotData={testPlotData}
               chartOptions={chartOptions}
               className="result-section"
             />

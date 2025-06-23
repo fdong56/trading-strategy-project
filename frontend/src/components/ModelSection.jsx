@@ -1,22 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Line } from 'react-chartjs-2';
+import React from 'react';
 
 export default function ModelSection({
   selectedModel,
   handleModelChange,
   MODEL_CONFIGS,
   config,
-  handleConfigChange
+  handleConfigChange,
+  handleTrain,
+  handleTest
 }) {
-
-
-  const [valStartDate, setValStartDate] = useState('2009-01-01');
-  const [valEndDate, setValEndDate] = useState('2010-01-01');
 
   // Ensure validation dates are within training period
   const minDate = '2000-02-01';
   const maxDate = '2012-09-12';
-
 
 
   return (
@@ -95,7 +91,7 @@ export default function ModelSection({
           <input
             type="date"
             id="val_start"
-            value={valStartDate}
+            value={config.test_start_date}
             min={minDate}
             max={maxDate}
             onChange={e => setValStartDate(e.target.value)}
@@ -106,8 +102,8 @@ export default function ModelSection({
           <input
             type="date"
             id="val_end"
-            value={valEndDate}
-            min={valStartDate}
+            value={config.test_end_date}
+            min={config.test_start_date}
             max={maxDate}
             onChange={e => setValEndDate(e.target.value)}
           />
@@ -115,8 +111,8 @@ export default function ModelSection({
       </div>
 
       <div className="date-row">
-        <button type="submit">🚀 Train Model</button>
-        <button type="submit">🚀 Test Model</button>
+        <button type="submit" onClick={handleTrain}>🚀 Train Model</button>
+        <button type="submit" onClick={handleTest}>🚀 Test Model</button>
       </div>
     </div>
   );
