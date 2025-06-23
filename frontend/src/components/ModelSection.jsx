@@ -88,7 +88,6 @@ export default function ModelSection({
           />
         </div>
       </div>
-      <button type="submit">🚀 Train Model</button>
 
       <div className="date-row">
         <div>
@@ -115,7 +114,10 @@ export default function ModelSection({
         </div>
       </div>
 
-      <button type="submit">🚀 Test Model</button>
+      <div className="date-row">
+        <button type="submit">🚀 Train Model</button>
+        <button type="submit">🚀 Test Model</button>
+      </div>
     </div>
   );
 }
