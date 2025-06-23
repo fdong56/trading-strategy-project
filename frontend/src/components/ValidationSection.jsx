@@ -50,7 +50,7 @@ export default function ValidationSection({ config }) {
           />
         </div>
       </div>
-      {priceData && priceData.dates && priceData.prices && (
+      {/* {priceData && priceData.dates && priceData.prices && (
         <div style={{ marginTop: 16, marginBottom: 16, border: '1px solid #ccc', borderRadius: '8px' }}>
           {priceData ? (
             <Line
@@ -95,7 +95,8 @@ export default function ValidationSection({ config }) {
             <div className="chart-placeholder" title="Stock Price Chart"></div>
           )}
         </div>
-      )}
+      )} */}
+      <button type="submit">🚀 Train Model</button>
     </div>
   );
 }
