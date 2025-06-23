@@ -1,9 +1,9 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
 
-export default function ResultSection({ plotData, chartOptions }) {
+export default function ResultSection({ plotData, chartOptions, className = "result-section-training" }) {
   return (
-    <div className="result-section">
+    <div className={className}>
       <h3>🧠 Training Result</h3>
       {plotData ? (
         <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>

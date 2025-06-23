@@ -325,9 +325,15 @@ function App() {
             <ResultSection
               plotData={plotData}
               chartOptions={chartOptions}
+              className="result-section-training"
             />
             <ValidationSection
               config={config}
+            />
+            <ResultSection
+              plotData={plotData}
+              chartOptions={chartOptions}
+              className="result-section-testing"
             />
           </div>
         </form>
