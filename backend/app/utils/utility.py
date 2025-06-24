@@ -17,7 +17,7 @@ def all_y_same(data_y):
     -------
     bool
         True if all values are the same, False otherwise
-    
+
     """
     if_equal = data_y == data_y[0]
     if False in if_equal:
@@ -84,7 +84,7 @@ def get_data(symbols, dates, add_spy=True, col_name="Adj Close"):
             index_col="Date",
             parse_dates=True,
             usecols=["Date", col_name],
-            na_values=["nan"]
+            na_values=["nan"],
         )
         df_temp = df_temp.rename(columns={col_name: symbol})
         # print(f"DEBUG: df_temp index tz for {symbol}:", df_temp.index.tz)
@@ -92,6 +92,7 @@ def get_data(symbols, dates, add_spy=True, col_name="Adj Close"):
         if symbol == "SPY":
             df = df.dropna(subset=["SPY"])
     return df
+
 
 def process_data(symbol, dates):
     """
@@ -119,7 +120,8 @@ def process_data(symbol, dates):
     prices_train.ffill(inplace=True)
     prices_train.bfill(inplace=True)
 
-    return prices_train;
+    return prices_train
+
 
 def normalize_indicator(indicator):
     """
@@ -141,7 +143,10 @@ def normalize_indicator(indicator):
     indicator_norm = (indicator - indicator_min) / (indicator_max - indicator_min)
     return indicator_norm
 
-def compute_portvals(trades, start_val=100000, commission=9.95, impact=0.005, symbol='JPM'):
+
+def compute_portvals(
+    trades, start_val=100000, commission=9.95, impact=0.005, symbol="JPM"
+):
     """
     This function computes the portfolio value over time based on a series
     of trades, taking into account commission and market impact.
@@ -167,19 +172,21 @@ def compute_portvals(trades, start_val=100000, commission=9.95, impact=0.005, sy
     start_date = trades.index[0]
     end_date = trades.index[-1]
     prices = process_data(symbol, pd.date_range(start_date, end_date))
-    prices['CASH'] = 1.0
+    prices["CASH"] = 1.0
 
     # create Trades dataframe
-    trades['CASH'] = 0.0
-    trades.loc[(trades[symbol] != 0.0), ['CASH']] = (prices[symbol] * trades[symbol] * (-1.0)
-                                                     - commission - prices[symbol] * impact * abs(trades[symbol]))
-
+    trades["CASH"] = 0.0
+    trades.loc[(trades[symbol] != 0.0), ["CASH"]] = (
+        prices[symbol] * trades[symbol] * (-1.0)
+        - commission
+        - prices[symbol] * impact * abs(trades[symbol])
+    )
 
     # create Holdings dataframe
     holdings_ = prices.copy()
     holdings_.iloc[:, :] = 0.0
     # holdings_['CASH'].iloc[0] = start_val
-    holdings_.loc[holdings_.index[0], 'CASH'] = start_val
+    holdings_.loc[holdings_.index[0], "CASH"] = start_val
     holdings_ += trades
     holdings = holdings_.expanding(1).sum()
 
@@ -188,6 +195,8 @@ def compute_portvals(trades, start_val=100000, commission=9.95, impact=0.005, sy
     values.iloc[:, :] = 0.0
     values = prices * holdings
     port_vals = values.sum(axis=1)
-    port_vals_df = pd.DataFrame(data=port_vals.values, index=port_vals.index, columns=['p_VALUE'])
+    port_vals_df = pd.DataFrame(
+        data=port_vals.values, index=port_vals.index, columns=["p_VALUE"]
+    )
 
     return port_vals_df

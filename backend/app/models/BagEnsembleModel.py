@@ -17,7 +17,7 @@ class BagEnsembleModel(object):
         Number of models in the ensemble, defaults to 20
     """
 
-    def __init__(self, model, kwargs={"argument1":1, "argument2":2}, bags=20):
+    def __init__(self, model, kwargs={"argument1": 1, "argument2": 2}, bags=20):
         """
         Initialize the bagging ensemble model.
         """
@@ -37,7 +37,9 @@ class BagEnsembleModel(object):
             Target values to predict
         """
         for model in self.models:
-            index_random = np.random.randint(low=0, high=data_x.shape[0], size=data_x.shape[0])
+            index_random = np.random.randint(
+                low=0, high=data_x.shape[0], size=data_x.shape[0]
+            )
             model.add_evidence(data_x[index_random], data_y[index_random])
 
     def query(self, points):
@@ -59,6 +61,3 @@ class BagEnsembleModel(object):
         for model in self.models:
             ret.append(model.query(points))
         return stats.mode(ret).mode
-
-
-

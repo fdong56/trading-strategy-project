@@ -7,16 +7,18 @@ from backend.app.utils import indicators, utility
 
 class QLearningTrader(object):
 
-    # constructor  		  	   		 	   			  		 			     			  	 
-    def __init__(self, 
-                 impact=0.0, 
-                 commission=0.0, 
-                 bins=10,
-                 alpha=0.2,
-                 gamma=0.9,
-                 rar=0.98,
-                 radr=0.999,
-                 dyna=0):
+    # constructor
+    def __init__(
+        self,
+        impact=0.0,
+        commission=0.0,
+        bins=10,
+        alpha=0.2,
+        gamma=0.9,
+        rar=0.98,
+        radr=0.999,
+        dyna=0,
+    ):
         """
         Constructor method
 
@@ -26,7 +28,7 @@ class QLearningTrader(object):
         :type commission: float
         """
 
-        self.impact = impact  		  	   		 	   			  		 			     			  	 
+        self.impact = impact
         self.commission = commission
         self.learner = None
         self.bins = bins
@@ -38,9 +40,9 @@ class QLearningTrader(object):
             gamma=gamma,
             rar=rar,
             radr=radr,
-            dyna=dyna
+            dyna=dyna,
         )
-  		  	   		 	   			  		 			     			  	 
+
     # Train the model for trading
     def train_model(
         self,
@@ -48,7 +50,7 @@ class QLearningTrader(object):
         sd=datetime.datetime(2008, 1, 1),
         ed=datetime.datetime(2009, 1, 1),
         sv=100000,
-        indicators_with_params=None
+        indicators_with_params=None,
     ):
         """
         Train the strategy model over a given time frame using user-specified indicators and parameters.
@@ -76,7 +78,7 @@ class QLearningTrader(object):
             indicators_with_params = {
                 "bbp": {"lookback": 10},
                 "rsi": {"lookback": 10},
-                "macd": {"short_period": 12, "long_period": 26}
+                "macd": {"short_period": 12, "long_period": 26},
             }
         self.indicators_with_params = indicators_with_params  # Store for later use
         prices_train = utility.process_data(symbol, pd.date_range(sd, ed))
@@ -93,12 +95,20 @@ class QLearningTrader(object):
             action = self.learner.querysetstate(state)
             holding_shares = 0
             while day < prices_train.shape[0] - 1:
-                step_reward, shares_to_buy, holding_shares = self.calculate_reward(day, action, holding_shares, prices_train)
+                step_reward, shares_to_buy, holding_shares = self.calculate_reward(
+                    day, action, holding_shares, prices_train
+                )
                 state = indi_states_df.iloc[day + 1]
                 action = self.learner.query(state, step_reward)
                 trades.iloc[day] = shares_to_buy
                 day += 1
-            port_vals_df = utility.compute_portvals(trades, start_val=sv, commission=self.commission, impact=self.impact, symbol=symbol)
+            port_vals_df = utility.compute_portvals(
+                trades,
+                start_val=sv,
+                commission=self.commission,
+                impact=self.impact,
+                symbol=symbol,
+            )
             portvals = port_vals_df[port_vals_df.columns[0]]
             current_cum_ret = portvals.iloc[-1] / portvals.iloc[0] - 1
 
@@ -107,7 +117,7 @@ class QLearningTrader(object):
         self,
         symbol="IBM",
         sd=datetime.datetime(2009, 1, 1),
-        ed=datetime.datetime(2010, 1, 1)
+        ed=datetime.datetime(2010, 1, 1),
     ):
         """
         Test the trained model using the same indicators and parameters as in training.
@@ -128,17 +138,28 @@ class QLearningTrader(object):
         pandas.DataFrame
             DataFrame with values representing trades for each day.
         """
-        if not hasattr(self, "indicators_with_params") or self.indicators_with_params is None:
-            raise ValueError("No indicators_with_params stored from training. Please train the model first.")
+        if (
+            not hasattr(self, "indicators_with_params")
+            or self.indicators_with_params is None
+        ):
+            raise ValueError(
+                "No indicators_with_params stored from training. Please train the model first."
+            )
         prices_test = utility.process_data(symbol, pd.date_range(sd, ed))
-        indi_states_test = self.get_indi_states(prices_test, self.indicators_with_params)
+        indi_states_test = self.get_indi_states(
+            prices_test, self.indicators_with_params
+        )
         day = 0
         holding_shares = 0
-        trades_test = pd.DataFrame(0, index=prices_test.index, columns=prices_test.columns)
+        trades_test = pd.DataFrame(
+            0, index=prices_test.index, columns=prices_test.columns
+        )
         while day < prices_test.shape[0] - 1:
             state = indi_states_test.iloc[day]
             action = self.learner.querysetstate(state)
-            step_reward, shares_to_buy, holding_shares = self.calculate_reward(day, action, holding_shares, prices_test)
+            step_reward, shares_to_buy, holding_shares = self.calculate_reward(
+                day, action, holding_shares, prices_test
+            )
             trades_test.iloc[day] = shares_to_buy
             day += 1
         return trades_test
@@ -188,7 +209,7 @@ class QLearningTrader(object):
         to_buy = 0
         updated_holding = holding
 
-        if a == 0: # Long
+        if a == 0:  # Long
             updated_holding = 1000
             if holding == 1000:
                 to_buy = 0
@@ -196,7 +217,7 @@ class QLearningTrader(object):
                 to_buy = 2000
             elif holding == 0:
                 to_buy = 1000
-        elif a == 1: # Short
+        elif a == 1:  # Short
             r = r * (-1)
             updated_holding = -1000
             if holding == -1000:
@@ -205,7 +226,7 @@ class QLearningTrader(object):
                 to_buy = -2000
             elif holding == 0:
                 to_buy = -1000
-        elif a == 2: # CASH
+        elif a == 2:  # CASH
             r = 0
             updated_holding = 0
             if holding == 1000:
@@ -222,15 +243,22 @@ class QLearningTrader(object):
         indicator_1_norm = utility.normalize_indicator(indicator_1)
         indicator_2_norm = utility.normalize_indicator(indicator_2)
         indicator_3_norm = utility.normalize_indicator(indicator_3)
-        indicator_1_norm[indicator_1.columns[0]] = pd.cut(indicator_1_norm[indicator_1_norm.columns[0]], self.bins, labels=False)
-        indicator_2_norm[indicator_2.columns[0]] = pd.cut(indicator_2_norm[indicator_2_norm.columns[0]], self.bins, labels=False)
-        indicator_3_norm[indicator_3.columns[0]] = pd.cut(indicator_3_norm[indicator_3_norm.columns[0]], self.bins, labels=False)
+        indicator_1_norm[indicator_1.columns[0]] = pd.cut(
+            indicator_1_norm[indicator_1_norm.columns[0]], self.bins, labels=False
+        )
+        indicator_2_norm[indicator_2.columns[0]] = pd.cut(
+            indicator_2_norm[indicator_2_norm.columns[0]], self.bins, labels=False
+        )
+        indicator_3_norm[indicator_3.columns[0]] = pd.cut(
+            indicator_3_norm[indicator_3_norm.columns[0]], self.bins, labels=False
+        )
         indicator_state = indicator_1_norm.copy()
-        indicator_state[indicator_state.columns[0]] = (indicator_1_norm[indicator_1_norm.columns[0]] * 100
-                                                       + indicator_2_norm[indicator_2_norm.columns[0]] * 10
-                                                       + indicator_3_norm[indicator_3_norm.columns[0]])
+        indicator_state[indicator_state.columns[0]] = (
+            indicator_1_norm[indicator_1_norm.columns[0]] * 100
+            + indicator_2_norm[indicator_2_norm.columns[0]] * 10
+            + indicator_3_norm[indicator_3_norm.columns[0]]
+        )
         indicator_state.ffill(inplace=True)
         indicator_state.bfill(inplace=True)
-        indicator_state = indicator_state.astype('int32')
+        indicator_state = indicator_state.astype("int32")
         return indicator_state
-

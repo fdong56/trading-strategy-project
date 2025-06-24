@@ -25,15 +25,15 @@ class QLearner(object):
     """
 
     def __init__(
-            self,
-            num_states=100,
-            num_actions=4,
-            alpha=0.2,
-            gamma=0.9,
-            rar=0.5,
-            radr=0.99,
-            dyna=0,
-            verbose=False,
+        self,
+        num_states=100,
+        num_actions=4,
+        alpha=0.2,
+        gamma=0.9,
+        rar=0.5,
+        radr=0.99,
+        dyna=0,
+        verbose=False,
     ):
         """
         Constructor method
@@ -84,9 +84,11 @@ class QLearner(object):
         :return: The selected action
         :rtype: int
         """
-        self.q_table[self.s, self.a] += self.alpha * (r
-                                                      + self.gamma * self.q_table[s_prime, :].max()
-                                                      - self.q_table[self.s, self.a])
+        self.q_table[self.s, self.a] += self.alpha * (
+            r
+            + self.gamma * self.q_table[s_prime, :].max()
+            - self.q_table[self.s, self.a]
+        )
 
         if rand.uniform(0.0, 1.0) <= self.rar:
             action = rand.randint(0, self.num_actions - 1)
@@ -98,10 +100,14 @@ class QLearner(object):
             self.previous.append((self.s, self.a, s_prime, r))
             random_index = np.random.randint(len(self.previous), size=self.dyna)
             for i in range(self.dyna):
-                s_random, a_random, s_prime_dyna, r_dyna = self.previous[random_index[i]]
-                self.q_table[s_random, a_random] += self.alpha * (r_dyna
-                                                                  + self.gamma * self.q_table[s_prime_dyna, :].max()
-                                                                  - self.q_table[s_random, a_random])
+                s_random, a_random, s_prime_dyna, r_dyna = self.previous[
+                    random_index[i]
+                ]
+                self.q_table[s_random, a_random] += self.alpha * (
+                    r_dyna
+                    + self.gamma * self.q_table[s_prime_dyna, :].max()
+                    - self.q_table[s_random, a_random]
+                )
 
         self.s = s_prime
         self.a = action

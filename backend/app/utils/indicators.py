@@ -24,11 +24,15 @@ def golden_death_cross(prices, lookback_1=20, lookback_2=50):
     pandas.DataFrame
         DataFrame containing both SMAs
     """
-    ret_df = pd.DataFrame(0.0, index=prices.index, columns=['%d-day SMA' % lookback_1, '%d-day SMA' % lookback_2])
+    ret_df = pd.DataFrame(
+        0.0,
+        index=prices.index,
+        columns=["%d-day SMA" % lookback_1, "%d-day SMA" % lookback_2],
+    )
     sma_1 = prices.rolling(window=lookback_1, min_periods=lookback_1).mean()
     sma_2 = prices.rolling(window=lookback_2, min_periods=lookback_2).mean()
-    ret_df['%d-day SMA' % lookback_1] = sma_1
-    ret_df['%d-day SMA' % lookback_2] = sma_2
+    ret_df["%d-day SMA" % lookback_1] = sma_1
+    ret_df["%d-day SMA" % lookback_2] = sma_2
     return ret_df
 
 
@@ -52,13 +56,13 @@ def bollinger_band_indicator(prices, lookback=20):
     pandas.DataFrame
         DataFrame containing the %B values
     """
-    ret_df = pd.DataFrame(0.0, index=prices.index, columns=['%B'])
+    ret_df = pd.DataFrame(0.0, index=prices.index, columns=["%B"])
     rolling_std = prices.rolling(window=lookback, min_periods=lookback).std()
     sma = prices.rolling(window=lookback, min_periods=lookback).mean()
     upper_band = sma + (2 * rolling_std)
     lower_band = sma - (2 * rolling_std)
     bbp_df = (prices - lower_band) / (upper_band - lower_band)
-    ret_df['%B'] = bbp_df
+    ret_df["%B"] = bbp_df
     return ret_df
 
 
@@ -81,9 +85,9 @@ def roc_indicator(prices, lookback):
     pandas.DataFrame
         DataFrame containing the ROC values
     """
-    ret_df = pd.DataFrame(0.0, index=prices.index, columns=['ROC'])
+    ret_df = pd.DataFrame(0.0, index=prices.index, columns=["ROC"])
     roc = (prices / prices.shift(lookback - 1) - 1) * 100
-    ret_df['ROC'] = roc
+    ret_df["ROC"] = roc
     ret_df = ret_df.dropna()
     return ret_df
 
@@ -111,13 +115,13 @@ def macd_indicator(prices, short_period=12, long_period=26, signal_period=9):
     pandas.DataFrame
         DataFrame containing the MACD values
     """
-    ret_df = pd.DataFrame(0.0, index=prices.index, columns=['MACD', 'Signal'])
+    ret_df = pd.DataFrame(0.0, index=prices.index, columns=["MACD", "Signal"])
     ema_short = prices.ewm(span=short_period).mean()
     ema_long = prices.ewm(span=long_period).mean()
     macd = ema_short - ema_long
-    ret_df['MACD'] = macd
-    ret_df['Signal'] = ret_df['MACD'].ewm(span=signal_period).mean()
-    ret_df = ret_df.drop('Signal', axis=1)
+    ret_df["MACD"] = macd
+    ret_df["Signal"] = ret_df["MACD"].ewm(span=signal_period).mean()
+    ret_df = ret_df.drop("Signal", axis=1)
     return ret_df
 
 
@@ -140,7 +144,7 @@ def rsi_indicator(prices, lookback):
     pandas.DataFrame
         DataFrame containing the RSI values
     """
-    ret_df = pd.DataFrame(0.0, index=prices.index, columns=['RSI'])
+    ret_df = pd.DataFrame(0.0, index=prices.index, columns=["RSI"])
     dif = prices.diff()
     # dif = dif.dropna()
     gain = dif.clip(lower=0)
@@ -150,5 +154,5 @@ def rsi_indicator(prices, lookback):
     rs = roll_gain_ave / roll_loss_ave
     rsi = 100.0 - (100.0 / (1.0 + rs))
     rsi[rsi == np.inf] = 100
-    ret_df['RSI'] = rsi
+    ret_df["RSI"] = rsi
     return ret_df

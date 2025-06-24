@@ -26,7 +26,7 @@ def get_indicators(prices_data, indicators_with_params):
     -------
     pandas.DataFrame containing the selected normalized technical indicators.
     """
-    
+
     indicator_funcs = {
         "gold cross": indicators.golden_death_cross,
         "bbp": indicators.bollinger_band_indicator,
@@ -87,14 +87,16 @@ class RandomForestTrader(object):
     """
 
     # Constructor
-    def __init__(self,
-                 impact=0.0,
-                 commission=0.0,
-                 n_day_return=5,
-                 y_buy=0.008,
-                 y_sell=-0.008,
-                 leaf_size=6,
-                 num_bags=10):
+    def __init__(
+        self,
+        impact=0.0,
+        commission=0.0,
+        n_day_return=5,
+        y_buy=0.008,
+        y_sell=-0.008,
+        leaf_size=6,
+        num_bags=10,
+    ):
         """
         Initialize the trading system with specified parameters.
         """
@@ -105,14 +107,13 @@ class RandomForestTrader(object):
         self.YSELL = y_sell - impact
         self.learner = bag(tm, kwargs={"leaf_size": leaf_size}, bags=num_bags)
 
-    
     def train_model(
-            self,
-            symbol="IBM",
-            sd=datetime.datetime(2008, 1, 1),
-            ed=datetime.datetime(2009, 1, 1),
-            sv=100000,
-            indicators_with_params=None
+        self,
+        symbol="IBM",
+        sd=datetime.datetime(2008, 1, 1),
+        ed=datetime.datetime(2009, 1, 1),
+        sv=100000,
+        indicators_with_params=None,
     ):
         """
         Train the trading model using historical data and user-specified indicators.
@@ -133,14 +134,16 @@ class RandomForestTrader(object):
             indicators_with_params = {
                 "bbp": {"lookback": 10},
                 "rsi": {"lookback": 10},
-                "macd": {"short_period": 12, "long_period": 26}
+                "macd": {"short_period": 12, "long_period": 26},
             }
         self.indicators_with_params = indicators_with_params
 
         prices_train = utility.process_data(symbol, pd.date_range(sd, ed))
         indicators_df = get_indicators(prices_train, indicators_with_params)
         ret_df = prices_train.copy()
-        ret_df = ret_df.shift(-1 * (self.N + 1)) / ret_df.shift(-1) - 1  # Future N day return
+        ret_df = (
+            ret_df.shift(-1 * (self.N + 1)) / ret_df.shift(-1) - 1
+        )  # Future N day return
         data_train_df = indicators_df.join(ret_df).dropna()
         data_train_arr = data_train_df.to_numpy()
 
@@ -148,21 +151,28 @@ class RandomForestTrader(object):
         # +1 (Long): N-day return > YBUY
         # -1 (Short): N-day return < YSELL
         # 0 (Cash): Otherwise
-        data_train_arr[:, -1] = np.where(data_train_arr[:, -1] > self.YBUY, 1, data_train_arr[:, -1])
-        data_train_arr[:, -1] = np.where(data_train_arr[:, -1] < self.YSELL, -1, data_train_arr[:, -1])
-        data_train_arr[:, -1] = np.where((data_train_arr[:, -1] != 1) & (data_train_arr[:, -1] != -1), 0, data_train_arr[:, -1])
+        data_train_arr[:, -1] = np.where(
+            data_train_arr[:, -1] > self.YBUY, 1, data_train_arr[:, -1]
+        )
+        data_train_arr[:, -1] = np.where(
+            data_train_arr[:, -1] < self.YSELL, -1, data_train_arr[:, -1]
+        )
+        data_train_arr[:, -1] = np.where(
+            (data_train_arr[:, -1] != 1) & (data_train_arr[:, -1] != -1),
+            0,
+            data_train_arr[:, -1],
+        )
 
         data_x = data_train_arr[:, :-1]
         data_y = data_train_arr[:, -1]
 
         self.learner.add_evidence(data_x, data_y)
 
-    
     def test_model(
-            self,
-            symbol="IBM",
-            sd=datetime.datetime(2009, 1, 1),
-            ed=datetime.datetime(2010, 1, 1)
+        self,
+        symbol="IBM",
+        sd=datetime.datetime(2009, 1, 1),
+        ed=datetime.datetime(2010, 1, 1),
     ):
         """
         Test the trading model on out-of-sample data using the same indicators and parameters as training.
@@ -186,8 +196,13 @@ class RandomForestTrader(object):
             - +2000.0/-2000.0: Switch positions (long to short or vice versa)
         """
 
-        if not hasattr(self, "indicators_with_params") or self.indicators_with_params is None:
-            raise ValueError("No indicators_with_params stored from training. Please train the model first.")
+        if (
+            not hasattr(self, "indicators_with_params")
+            or self.indicators_with_params is None
+        ):
+            raise ValueError(
+                "No indicators_with_params stored from training. Please train the model first."
+            )
 
         prices_test = utility.process_data(symbol, pd.date_range(sd, ed))
         indicators_test_df = get_indicators(prices_test, self.indicators_with_params)
