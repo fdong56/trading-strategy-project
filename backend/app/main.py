@@ -2,17 +2,18 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from backend.app.models.QLearningTrader import QLearningTrader
-from backend.app.models.RandomForestTrader import RandomForestTrader
 import glob
-from backend.app.utils.utility import compute_portvals  # Add this import at the top
 import logging
 import traceback
 import pandas as pd
+from backend.app.models.QLearningTrader import QLearningTrader
+from backend.app.models.RandomForestTrader import RandomForestTrader
+from backend.app.utils.utility import compute_portvals
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 logging.basicConfig(level=logging.DEBUG)
 
