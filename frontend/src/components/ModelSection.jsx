@@ -94,7 +94,7 @@ export default function ModelSection({
             value={config.test_start_date}
             min={minDate}
             max={maxDate}
-            onChange={e => setValStartDate(e.target.value)}
+            onChange={e => handleConfigChange('test_start_date', e.target.value)}
           />
         </div>
         <div>
@@ -105,7 +105,7 @@ export default function ModelSection({
             value={config.test_end_date}
             min={config.test_start_date}
             max={maxDate}
-            onChange={e => setValEndDate(e.target.value)}
+            onChange={e => handleConfigChange('test_end_date', e.target.value)}
           />
         </div>
       </div>

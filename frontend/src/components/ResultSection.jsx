@@ -32,7 +32,7 @@ export default function ResultSection({ trainPlotData, testPlotData, className =
         },
         grid: { display: false },
         ticks: {
-          callback: function(value, index, values) {
+          callback: function(value) {
             const date = new Date(this.getLabelForValue(value));
             return date.toISOString().split('T')[0];
           }
