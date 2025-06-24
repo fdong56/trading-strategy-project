@@ -16,6 +16,8 @@ import {
   Legend
 } from 'chart.js';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // Register ChartJS components
 ChartJS.register(
   CategoryScale,
@@ -178,7 +180,7 @@ function App() {
 
   // Helper to fetch plot data and set state
   async function fetchAndSetPlotData(formattedConfig, indicators_with_params, setPlotData) {
-    const plotResponse = await fetch('http://localhost:8000/api/plot', {
+    const plotResponse = await fetch(`${API_URL}/api/plot`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -221,7 +223,7 @@ function App() {
     
     try {
       // Train the model
-      const trainResponse = await fetch('http://localhost:8000/api/train', {
+      const trainResponse = await fetch(`${API_URL}/api/train`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

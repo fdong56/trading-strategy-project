@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function StockSection({ config, handleConfigChange }) {
   const [stockSymbols, setStockSymbols] = useState([]);
   const [priceData, setPriceData] = useState(null);
@@ -9,7 +11,7 @@ export default function StockSection({ config, handleConfigChange }) {
   const maxDate = '2012-09-12';
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/symbols')
+    fetch(`${API_URL}/api/symbols`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -25,7 +27,7 @@ export default function StockSection({ config, handleConfigChange }) {
 
   useEffect(() => {
     if (config.symbol) {
-      fetch(`http://localhost:8000/api/price?symbol=${config.symbol}&start_date=${minDate}&end_date=${maxDate}`)
+      fetch(`${API_URL}/api/price?symbol=${config.symbol}&start_date=${minDate}&end_date=${maxDate}`)
         .then(res => {
           if (!res.ok) throw new Error('Failed to fetch price data');
           return res.json();
