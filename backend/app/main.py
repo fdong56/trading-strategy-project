@@ -9,9 +9,9 @@ import glob
 import logging
 import traceback
 import pandas as pd
-from backend.app.models.QLearningTrader import QLearningTrader
-from backend.app.models.RandomForestTrader import RandomForestTrader
-from backend.app.utils.utility import compute_portvals
+from .models.QLearningTrader import QLearningTrader
+from .models.RandomForestTrader import RandomForestTrader
+from .utils.utility import compute_portvals
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
