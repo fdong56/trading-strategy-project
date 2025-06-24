@@ -46,7 +46,7 @@ def symbol_to_path(symbol, base_dir=None):
     if base_dir is None:
         # Always resolve data directory relative to the project root
         base_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "../../../data/")
+            os.path.join(os.path.dirname(__file__), "../../../backend/data/")
         )
     return os.path.join(base_dir, f"{symbol}.csv")
 
