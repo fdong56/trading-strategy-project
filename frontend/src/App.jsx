@@ -176,6 +176,37 @@ function App() {
     return result;
   };
 
+  // Helper to fetch plot data and set state
+  async function fetchAndSetPlotData(formattedConfig, indicators_with_params, setPlotData) {
+    const plotResponse = await fetch('http://localhost:8000/api/plot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model_type: selectedModel,
+        qlearning_config: selectedModel === 'QLearningTrader' ? formattedConfig : null,
+        decision_tree_config: selectedModel === 'RandomForestTrader' ? formattedConfig : null,
+        indicators_with_params
+      })
+    });
+
+    if (!plotResponse.ok) {
+      const errorData = await plotResponse.json();
+      if (errorData.detail) {
+        if (Array.isArray(errorData.detail)) {
+          const errorMessages = errorData.detail.map(err => 
+            `${err.loc[err.loc.length - 1]}: ${err.msg}`
+          ).join('\n');
+          throw new Error(`Validation errors:\n${errorMessages}`);
+        } else {
+          throw new Error(errorData.detail);
+        }
+      }
+      throw new Error('Failed to get plot data');
+    }
+
+    const plotResult = await plotResponse.json();
+    setPlotData(plotResult);
+  }
 
   const handleTrain = async (e) => {
     e.preventDefault();
@@ -217,34 +248,7 @@ function App() {
       }
 
       // Get plot data for training
-      const plotResponse = await fetch('http://localhost:8000/api/plot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model_type: selectedModel,
-          qlearning_config: selectedModel === 'QLearningTrader' ? formattedConfig : null,
-          decision_tree_config: selectedModel === 'RandomForestTrader' ? formattedConfig : null,
-          indicators_with_params
-        })
-      });
-
-      if (!plotResponse.ok) {
-        const errorData = await plotResponse.json();
-        if (errorData.detail) {
-          if (Array.isArray(errorData.detail)) {
-            const errorMessages = errorData.detail.map(err => 
-              `${err.loc[err.loc.length - 1]}: ${err.msg}`
-            ).join('\n');
-            throw new Error(`Validation errors:\n${errorMessages}`);
-          } else {
-            throw new Error(errorData.detail);
-          }
-        }
-        throw new Error('Failed to get plot data');
-      }
-
-      const plotResult = await plotResponse.json();
-      setTrainPlotData(plotResult);
+      await fetchAndSetPlotData(formattedConfig, indicators_with_params, setTrainPlotData);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -264,34 +268,7 @@ function App() {
     try {
       
       // Get plot data for testing
-      const plotResponse = await fetch('http://localhost:8000/api/plot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model_type: selectedModel,
-          qlearning_config: selectedModel === 'QLearningTrader' ? formattedConfig : null,
-          decision_tree_config: selectedModel === 'RandomForestTrader' ? formattedConfig : null,
-          indicators_with_params
-        })
-      });
-
-      if (!plotResponse.ok) {
-        const errorData = await plotResponse.json();
-        if (errorData.detail) {
-          if (Array.isArray(errorData.detail)) {
-            const errorMessages = errorData.detail.map(err => 
-              `${err.loc[err.loc.length - 1]}: ${err.msg}`
-            ).join('\n');
-            throw new Error(`Validation errors:\n${errorMessages}`);
-          } else {
-            throw new Error(errorData.detail);
-          }
-        }
-        throw new Error('Failed to get plot data');
-      }
-
-      const plotResult = await plotResponse.json();
-      setTestPlotData(plotResult);
+      await fetchAndSetPlotData(formattedConfig, indicators_with_params, setTestPlotData);
     } catch (error) {
       console.error('Error:', error);
     }
