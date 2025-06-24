@@ -1,7 +1,46 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
 
-export default function ResultSection({ trainPlotData, testPlotData, chartOptions, className = "result-section" }) {
+export default function ResultSection({ trainPlotData, testPlotData, className = "result-section" }) {
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          pointStyle: 'line'
+        }
+      },
+      title: {
+        display: true,
+        text: 'Model Performance vs Benchmark'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: 'Normalized Portfolio Value'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Date'
+        },
+        grid: { display: false },
+        ticks: {
+          callback: function(value, index, values) {
+            const date = new Date(this.getLabelForValue(value));
+            return date.toISOString().split('T')[0];
+          }
+        }
+      }
+    }
+  };
+
   return (
     <div className={className}>
       <h3>🧠 Training & Testing Results</h3>

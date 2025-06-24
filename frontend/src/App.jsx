@@ -274,45 +274,6 @@ function App() {
     }
   };
 
-  // Chart options
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          pointStyle: 'line'
-        }
-      },
-      title: {
-        display: true,
-        text: 'Model Performance vs Benchmark'
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: false,
-        title: {
-          display: true,
-          text: 'Normalized Portfolio Value'
-        }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Date'
-        },
-        ticks: {
-          callback: function(value, index, values) {
-            const date = new Date(this.getLabelForValue(value));
-            return date.toISOString().split('T')[0];
-          }
-        }
-      }
-    }
-  };
-
   return (
     <>
       <header>
@@ -344,7 +305,6 @@ function App() {
             <ResultSection
               trainPlotData={trainPlotData}
               testPlotData={testPlotData}
-              chartOptions={chartOptions}
               className="result-section"
             />
           </div>
