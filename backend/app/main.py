@@ -93,32 +93,6 @@ async def root():
     }
 
 
-@app.get("/api/models", response_model=List[ModelResponse])
-async def list_models():
-    """List available trading models and their parameters"""
-    return [
-        ModelResponse(
-            model_type="QLearningTrader",
-            parameters={
-                "impact": "float (default: 0.0)",
-                "commission": "float (default: 0.0)",
-                "bins": "int (default: 10)",
-                "alpha": "float (default: 0.2)",
-                "gamma": "float (default: 0.9)",
-                "rar": "float (default: 0.98)",
-                "radr": "float (default: 0.999)",
-                "dyna": "int (default: 0)",
-            },
-            description="Q-Learning based trading strategy using technical indicators",
-        ),
-        ModelResponse(
-            model_type="RandomForestTrader",
-            parameters={"leaf_size": "int (default: 1)"},
-            description="Random Forest based trading strategy",
-        ),
-    ]
-
-
 @app.post("/api/train")
 async def train_model(config: ModelConfig):
     try:
@@ -222,7 +196,8 @@ async def get_symbols():
     Return a sorted list of all available stock symbols (from CSV files in data/).
     """
     try:
-        csv_files = glob.glob("backend/data/**/*.csv", recursive=True)
+        data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+        csv_files = glob.glob(os.path.join(data_dir, '**', '*.csv'), recursive=True)
         symbols = sorted({os.path.splitext(os.path.basename(f))[0] for f in csv_files})
         return {"symbols": symbols}
     except Exception as e:
@@ -236,15 +211,14 @@ async def get_price_data(symbol: str, start_date: str, end_date: str):
     Return price data for a specified symbol and date range.
     """
     try:
-        file_path = f"backend/data/{symbol}.csv"
+        data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+        file_path = os.path.join(data_dir, f"{symbol}.csv")
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail=f"Symbol {symbol} not found")
-
         df = pd.read_csv(file_path)
         df["Date"] = pd.to_datetime(df["Date"])
         mask = (df["Date"] >= start_date) & (df["Date"] <= end_date)
         filtered_df = df.loc[mask].sort_values("Date")
-
         return {
             "dates": filtered_df["Date"].dt.strftime("%Y-%m-%d").tolist(),
             "prices": filtered_df["Close"].tolist(),
