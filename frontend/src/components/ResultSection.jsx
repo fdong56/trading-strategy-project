@@ -18,7 +18,7 @@ export default function ResultSection({
       },
       title: {
         display: true,
-        text: "Model Performance vs Benchmark",
+        text: "Model vs Benchmark",
       },
     },
     scales: {
@@ -31,7 +31,7 @@ export default function ResultSection({
       },
       x: {
         title: {
-          display: true,
+          display: false,
           text: "Date",
         },
         grid: { display: false },
@@ -48,13 +48,35 @@ export default function ResultSection({
   return (
     <div className={className}>
       <h3>🏆 Performance Results</h3>
+      {/* Shared Legend: only show if there is at least one result */}
+      {(trainPlotData || testPlotData) && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginBottom: 16 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{
+              display: "inline-block",
+              width: 18,
+              height: 4,
+              background: "rgb(75, 192, 192)",
+              borderRadius: 2
+            }}></span>
+            <span style={{ color: "#374151", fontWeight: 500 }}>ML Model</span>
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{
+              display: "inline-block",
+              width: 18,
+              height: 4,
+              background: "rgb(255, 99, 132)",
+              borderRadius: 2
+            }}></span>
+            <span style={{ color: "#374151", fontWeight: 500 }}>Benchmark</span>
+          </span>
+        </div>
+      )}
 
       {/* Training Results */}
       {trainPlotData ? (
         <div style={{ marginBottom: "20px" }}>
-          <h4 style={{ marginBottom: "10px", color: "#374151" }}>
-            Training Period Performance
-          </h4>
           <div
             style={{
               background: "white",
@@ -67,7 +89,7 @@ export default function ResultSection({
                 labels: trainPlotData.dates,
                 datasets: [
                   {
-                    label: "Model Performance",
+                    label: "Model",
                     data: trainPlotData.model_values,
                     borderColor: "rgb(75, 192, 192)",
                     tension: 0.1,
@@ -86,8 +108,15 @@ export default function ResultSection({
                 ...chartOptions,
                 plugins: {
                   ...chartOptions.plugins,
+                  legend: {
+                    display: false,
+                  },
                   title: {
-                    display: false, // Hide individual chart titles since we have a shared title
+                    display: true,
+                    text: "Training Period",
+                    font: { size: 16, weight: "bold" },
+                    color: "#374151",
+                    padding: { bottom: 16 }
                   },
                 },
               }}
@@ -96,9 +125,6 @@ export default function ResultSection({
         </div>
       ) : (
         <div style={{ marginBottom: "20px" }}>
-          <h4 style={{ marginBottom: "10px", color: "#374151" }}>
-            Training Period Performance
-          </h4>
           <span style={{ color: "#888" }}>
             No training result yet. Click "Train Model" to see results.
           </span>
@@ -108,9 +134,6 @@ export default function ResultSection({
       {/* Testing Results */}
       {testPlotData ? (
         <div>
-          <h4 style={{ marginBottom: "10px", color: "#374151" }}>
-            Testing Period Performance
-          </h4>
           <div
             style={{
               background: "white",
@@ -123,7 +146,7 @@ export default function ResultSection({
                 labels: testPlotData.dates,
                 datasets: [
                   {
-                    label: "Model Performance",
+                    label: "Model",
                     data: testPlotData.model_values,
                     borderColor: "rgb(75, 192, 192)",
                     tension: 0.1,
@@ -142,8 +165,15 @@ export default function ResultSection({
                 ...chartOptions,
                 plugins: {
                   ...chartOptions.plugins,
+                  legend: {
+                    display: false,
+                  },
                   title: {
-                    display: false, // Hide individual chart titles since we have a shared title
+                    display: true,
+                    text: "Testing Period",
+                    font: { size: 16, weight: "bold" },
+                    color: "#374151",
+                    padding: { bottom: 16 }
                   },
                 },
               }}
@@ -152,9 +182,6 @@ export default function ResultSection({
         </div>
       ) : (
         <div>
-          <h4 style={{ marginBottom: "10px", color: "#374151" }}>
-            Testing Period Performance
-          </h4>
           <span style={{ color: "#888" }}>
             No testing result yet. Click "Test Model" to see results.
           </span>
