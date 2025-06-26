@@ -196,8 +196,8 @@ async def get_symbols():
     Return a sorted list of all available stock symbols (from CSV files in data/).
     """
     try:
-        data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
-        csv_files = glob.glob(os.path.join(data_dir, '**', '*.csv'), recursive=True)
+        data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+        csv_files = glob.glob(os.path.join(data_dir, "**", "*.csv"), recursive=True)
         symbols = sorted({os.path.splitext(os.path.basename(f))[0] for f in csv_files})
         return {"symbols": symbols}
     except Exception as e:
@@ -211,7 +211,7 @@ async def get_price_data(symbol: str, start_date: str, end_date: str):
     Return price data for a specified symbol and date range.
     """
     try:
-        data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+        data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
         file_path = os.path.join(data_dir, f"{symbol}.csv")
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail=f"Symbol {symbol} not found")

@@ -248,7 +248,7 @@ function App() {
         }
         throw new Error('Training failed');
       }
-
+      
       // Get plot data for training
       await fetchAndSetPlotData(formattedConfig, indicators_with_params, setTrainPlotData);
     } catch (error) {
@@ -259,7 +259,7 @@ function App() {
   const handleTest = async (e) => {
     e.preventDefault();
     const indicators_with_params = buildIndicatorsWithParams();
-    
+
     // Create a copy of config with test dates
     const formattedConfig = {
       ...config,
