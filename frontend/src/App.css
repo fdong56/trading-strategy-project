@@ -1,5 +1,5 @@
 body {
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", sans-serif;
   background-color: #f0f4f8;
   margin: 0;
   padding: 0;
@@ -49,7 +49,8 @@ main {
   min-width: 320px;
 }
 
-h2, h3 {
+h2,
+h3 {
   font-size: 1.4rem;
   margin-bottom: 1rem;
   color: #111827;
@@ -63,7 +64,8 @@ label {
   color: #374151;
 }
 
-input, select {
+input,
+select {
   width: 100%;
   padding: 10px;
   border-radius: 6px;
@@ -111,7 +113,8 @@ button:hover {
 .chart-placeholder {
   width: 100%;
   height: 250px;
-  background: url('https://dummyimage.com/600x250/cccccc/ffffff.png&text=Stock+Price+Chart') center/cover no-repeat;
+  background: url("https://dummyimage.com/600x250/cccccc/ffffff.png&text=Stock+Price+Chart")
+    center/cover no-repeat;
   border-radius: 8px;
   margin-top: 16px;
 }
@@ -147,38 +150,38 @@ footer {
   box-sizing: border-box;
 }
 
-.stock-section { 
-  grid-column: 1; 
-  grid-row: 1; 
-  background: white; 
-  border-radius: 12px; 
+.stock-section {
+  grid-column: 1;
+  grid-row: 1;
+  background: white;
+  border-radius: 12px;
   padding: 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.indicators-section { 
-  grid-column: 2; 
-  grid-row: 1; 
-  background: white; 
-  border-radius: 12px; 
+.indicators-section {
+  grid-column: 2;
+  grid-row: 1;
+  background: white;
+  border-radius: 12px;
   padding: 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.model-section { 
-  grid-column: 1; 
-  grid-row: 2; 
-  background: white; 
-  border-radius: 12px; 
+.model-section {
+  grid-column: 1;
+  grid-row: 2;
+  background: white;
+  border-radius: 12px;
   padding: 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.result-section { 
-  grid-column: 2; 
-  grid-row: 2; 
-  background: #f6f8fa; 
-  border-radius: 12px; 
+.result-section {
+  grid-column: 2;
+  grid-row: 2;
+  background: #f6f8fa;
+  border-radius: 12px;
   padding: 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -190,7 +193,10 @@ footer {
     gap: 24px;
     padding: 16px;
   }
-  .stock-section, .indicators-section, .model-section, .result-section {
+  .stock-section,
+  .indicators-section,
+  .model-section,
+  .result-section {
     margin-bottom: 0;
   }
 }

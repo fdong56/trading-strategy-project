@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export default function ModelSection({
   selectedModel,
@@ -7,13 +7,11 @@ export default function ModelSection({
   config,
   handleConfigChange,
   handleTrain,
-  handleTest
+  handleTest,
 }) {
-
-  // Ensure validation dates are within training period
-  const minDate = '2000-02-01';
-  const maxDate = '2012-09-12';
-
+  // Ensure validation dates are within the training period
+  const minDate = "2000-02-01";
+  const maxDate = "2012-09-12";
 
   return (
     <div className="model-section">
@@ -37,7 +35,7 @@ export default function ModelSection({
             for (let i = 0; i < params.length; i += 3) {
               rows.push(
                 <div className="date-row" key={`model-row-${i}`}>
-                  {params.slice(i, i + 3).map(param => (
+                  {params.slice(i, i + 3).map((param) => (
                     <div key={param.key}>
                       <label htmlFor={param.key}>{param.label}</label>
                       <input
@@ -45,13 +43,15 @@ export default function ModelSection({
                         type={param.type}
                         id={param.key}
                         placeholder={param.placeholder}
-                        value={config[param.key] || ''}
+                        value={config[param.key] || ""}
                         step={param.step}
-                        onChange={e => handleConfigChange(param.key, e.target.value)}
+                        onChange={(e) =>
+                          handleConfigChange(param.key, e.target.value)
+                        }
                       />
                     </div>
                   ))}
-                </div>
+                </div>,
               );
             }
             return rows;
@@ -67,7 +67,7 @@ export default function ModelSection({
             value={config.start_date}
             min={minDate}
             max={maxDate}
-            onChange={e => handleConfigChange('start_date', e.target.value)}
+            onChange={(e) => handleConfigChange("start_date", e.target.value)}
             required
           />
         </div>
@@ -79,7 +79,7 @@ export default function ModelSection({
             value={config.end_date}
             min={config.start_date}
             max={maxDate}
-            onChange={e => handleConfigChange('end_date', e.target.value)}
+            onChange={(e) => handleConfigChange("end_date", e.target.value)}
             required
           />
         </div>
@@ -94,7 +94,9 @@ export default function ModelSection({
             value={config.test_start_date}
             min={minDate}
             max={maxDate}
-            onChange={e => handleConfigChange('test_start_date', e.target.value)}
+            onChange={(e) =>
+              handleConfigChange("test_start_date", e.target.value)
+            }
           />
         </div>
         <div>
@@ -105,14 +107,20 @@ export default function ModelSection({
             value={config.test_end_date}
             min={config.test_start_date}
             max={maxDate}
-            onChange={e => handleConfigChange('test_end_date', e.target.value)}
+            onChange={(e) =>
+              handleConfigChange("test_end_date", e.target.value)
+            }
           />
         </div>
       </div>
 
       <div className="date-row">
-        <button type="submit" onClick={handleTrain}>🚀 Train Model</button>
-        <button type="submit" onClick={handleTest}>🚀 Test Model</button>
+        <button type="submit" onClick={handleTrain}>
+          🚀 Train Model
+        </button>
+        <button type="submit" onClick={handleTest}>
+          🚀 Test Model
+        </button>
       </div>
     </div>
   );
