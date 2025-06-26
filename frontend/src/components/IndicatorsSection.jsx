@@ -9,16 +9,10 @@ export default function IndicatorsSection({
 }) {
   return (
     <div className="indicators-section">
-      <h3>📊 Indicators</h3>
+      <h3>📊 Step 2: Technical Indicators</h3>
       {[0, 1, 2].map((idx) => (
         <div key={idx} style={{ marginBottom: 16 }}>
-          <label
-            style={{
-              fontWeight: "bold",
-              fontSize: "1.08rem",
-              color: "#1f2937",
-            }}
-          >
+          <label>
             Select Indicator {idx + 1}
           </label>
           <select

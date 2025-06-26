@@ -438,8 +438,8 @@ export default function StockSection({ config, handleConfigChange }) {
 
   return (
     <div className="stock-section">
-      <h3>📈 Stock</h3>
-      <label htmlFor="symbol">Stock Symbol</label>
+      <h3>📈 Step 1:Select a Ticker</h3>
+      <label htmlFor="symbol">Ticker Symbol</label>
       <select
         id="symbol"
         value={config.symbol}
@@ -529,7 +529,7 @@ export default function StockSection({ config, handleConfigChange }) {
           />
         </div>
         <div>
-          <label htmlFor="start-value">Start Value</label>
+          <label htmlFor="start-value">Initial Capital</label>
           <input
             type="text"
             id="start-value"

@@ -47,7 +47,7 @@ export default function ResultSection({
 
   return (
     <div className={className}>
-      <h3>🧠 Training & Testing Results</h3>
+      <h3>🏆 Performance Results</h3>
 
       {/* Training Results */}
       {trainPlotData ? (

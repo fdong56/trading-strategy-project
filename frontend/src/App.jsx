@@ -387,7 +387,7 @@ function App() {
   return (
     <>
       <header>
-        <h1>📊 Trading Strategy Trainer</h1>
+        <h1>🎯 AI Trading Strategy Builder</h1>
       </header>
       <main>
         <form onSubmit={handleTrain} style={{ width: "100%" }}>

@@ -15,8 +15,8 @@ export default function ModelSection({
 
   return (
     <div className="model-section">
-      <h3>🧠 Model</h3>
-      <label htmlFor="model">Choose ML Model</label>
+      <h3>🤖 Step 3: ML Model Configuration</h3>
+      <label htmlFor="model">Select Algorithm</label>
       <select
         id="model"
         value={selectedModel}
@@ -60,7 +60,7 @@ export default function ModelSection({
       )}
       <div className="date-row">
         <div>
-          <label htmlFor="start">Training Start Date</label>
+          <label htmlFor="start">Train From</label>
           <input
             type="date"
             id="start"
@@ -72,7 +72,7 @@ export default function ModelSection({
           />
         </div>
         <div>
-          <label htmlFor="end">Training End Date</label>
+          <label htmlFor="end">Train To</label>
           <input
             type="date"
             id="end"
@@ -87,7 +87,7 @@ export default function ModelSection({
 
       <div className="date-row">
         <div>
-          <label htmlFor="val_start">Testing Start Date</label>
+          <label htmlFor="val_start">Test From</label>
           <input
             type="date"
             id="val_start"
@@ -100,7 +100,7 @@ export default function ModelSection({
           />
         </div>
         <div>
-          <label htmlFor="val_end">Testing End Date</label>
+          <label htmlFor="val_end">Test To</label>
           <input
             type="date"
             id="val_end"
