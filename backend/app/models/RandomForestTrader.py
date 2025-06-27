@@ -6,62 +6,6 @@ from .BagEnsembleModel import BagEnsembleModel as bag
 from .TreeModel import TreeModel as tm
 
 
-def get_indicators(prices_data, indicators_with_params):
-    """
-    Calculate and normalize selected technical indicators with user-defined parameters.
-
-    Parameters
-    ----------
-    prices_data : pandas.DataFrame
-        Historical price data
-    indicators_with_params : dict
-        Mapping of indicator names to their parameter dicts. Example:
-        {
-            "gold cross": {"lookback_1": 10, "lookback_2": 15},
-            "bbp": {"lookback": 20},
-            "roc": {"lookback": 5}
-        }
-
-    Returns
-    -------
-    pandas.DataFrame containing the selected normalized technical indicators.
-    """
-
-    indicator_funcs = {
-        "gold cross": indicators.golden_death_cross,
-        "bbp": indicators.bollinger_band_indicator,
-        "roc": indicators.roc_indicator,
-        "macd": indicators.macd_indicator,
-        "rsi": indicators.rsi_indicator,
-    }
-
-    indicator_mapping = {}
-
-    for name, params in indicators_with_params.items():
-        if name not in indicator_funcs:
-            raise ValueError(f"Indicator '{name}' is not supported.")
-        # Convert all params to int if possible
-        for k, v in params.items():
-            try:
-                params[k] = int(v)
-            except (ValueError, TypeError):
-                pass
-        indi_df = indicator_funcs[name](prices_data, **params)
-        indi_df = utility.normalize_indicator(indi_df)
-        indicator_mapping[name] = indi_df
-
-    # Join all selected indicators
-    indi_df = None
-    for df in indicator_mapping.values():
-        if indi_df is None:
-            indi_df = df
-        else:
-            indi_df = indi_df.join(df)
-    indi_df.ffill(inplace=True)
-    indi_df.bfill(inplace=True)
-    return indi_df
-
-
 class RandomForestTrader(object):
     """
     A trading system that uses a Random Forest (ensemble of random trees) to make trading decisions.
@@ -100,6 +44,7 @@ class RandomForestTrader(object):
         """
         Initialize the trading system with specified parameters.
         """
+        self.scaler_map = {}
         self.impact = impact
         self.commission = commission
         self.N = n_day_return
@@ -139,7 +84,7 @@ class RandomForestTrader(object):
         self.indicators_with_params = indicators_with_params
 
         prices_train = utility.process_data(symbol, pd.date_range(sd, ed))
-        indicators_df = get_indicators(prices_train, indicators_with_params)
+        indicators_df = self.get_indicators(prices_train, indicators_with_params)
         ret_df = prices_train.copy()
         ret_df = (
             ret_df.shift(-1 * (self.N + 1)) / ret_df.shift(-1) - 1
@@ -205,7 +150,10 @@ class RandomForestTrader(object):
             )
 
         prices_test = utility.process_data(symbol, pd.date_range(sd, ed))
-        indicators_test_df = get_indicators(prices_test, self.indicators_with_params)
+        indicators_test_df = self.get_indicators(
+            prices_test,
+            self.indicators_with_params,
+        )
         data_test_x_arr = indicators_test_df.to_numpy()
         predict_res = self.learner.query(data_test_x_arr)
         trades = pd.DataFrame(0.0, index=prices_test.index, columns=prices_test.columns)
@@ -223,3 +171,71 @@ class RandomForestTrader(object):
                 holding_shares = 0
 
         return trades
+
+    def predict(self, indicators_arr, symbol="IBM"):
+        if (
+            not hasattr(self, "indicators_with_params")
+            or self.indicators_with_params is None
+        ):
+            raise ValueError(
+                "No indicators_with_params stored from training. Please train the model first."
+            )
+
+        pass
+
+    def get_indicators(self, prices_data, indicators_with_params):
+        """
+        Calculate and normalize selected technical indicators with user-defined parameters.
+
+        Parameters
+        ----------
+        prices_data : pandas.DataFrame
+            Historical price data
+        indicators_with_params : dict
+            Mapping of indicator names to their parameter dicts. Example:
+            {
+                "gold cross": {"lookback_1": 10, "lookback_2": 15},
+                "bbp": {"lookback": 20},
+                "roc": {"lookback": 5}
+            }
+
+        Returns
+        -------
+        pandas.DataFrame containing the selected normalized technical indicators.
+        """
+
+        indicator_funcs = {
+            "gold cross": indicators.golden_death_cross,
+            "bbp": indicators.bollinger_band_indicator,
+            "roc": indicators.roc_indicator,
+            "macd": indicators.macd_indicator,
+            "rsi": indicators.rsi_indicator,
+        }
+
+        indicator_mapping = {}
+
+        for name, params in indicators_with_params.items():
+            if name not in indicator_funcs:
+                raise ValueError(f"Indicator '{name}' is not supported.")
+            # Convert all params to int if possible
+            for k, v in params.items():
+                try:
+                    params[k] = int(v)
+                except (ValueError, TypeError):
+                    pass
+            indi_df = indicator_funcs[name](prices_data, **params)
+            indi_df, scaler_min_, scaler_max_ = utility.normalize_indicator(indi_df, indicator_name=name, scaler_map=self.scaler_map)
+            self.scaler_map[name] = [scaler_min_, scaler_max_]
+            indicator_mapping[name] = indi_df
+
+        # Join all selected indicators
+        indi_df = None
+        for df in indicator_mapping.values():
+            if indi_df is None:
+                indi_df = df
+            else:
+                indi_df = indi_df.join(df)
+
+        indi_df.ffill(inplace=True)
+        indi_df.bfill(inplace=True)
+        return indi_df

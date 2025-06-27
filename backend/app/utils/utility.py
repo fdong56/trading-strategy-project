@@ -123,7 +123,7 @@ def process_data(symbol, dates):
     return prices_train
 
 
-def normalize_indicator(indicator):
+def normalize_indicator(indicator, indicator_name="", scaler_map=None):
     """
     This function performs min-max normalization on technical indicators,
     scaling all values to be between 0 and 1.
@@ -137,11 +137,16 @@ def normalize_indicator(indicator):
     -------
     pandas.DataFrame
         Normalized indicator values
+        :param scaler_map:
     """
-    indicator_min = indicator.min()
-    indicator_max = indicator.max()
+    if len(scaler_map) !=3:
+        indicator_min = indicator.min()
+        indicator_max = indicator.max()
+    else:
+        indicator_min = scaler_map[indicator_name][0]
+        indicator_max = scaler_map[indicator_name][1]
     indicator_norm = (indicator - indicator_min) / (indicator_max - indicator_min)
-    return indicator_norm
+    return indicator_norm, indicator_min, indicator_max
 
 
 def compute_portvals(
