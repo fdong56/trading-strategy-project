@@ -1,3 +1,9 @@
+"""
+utility.py: Utility functions for trading strategy project.
+
+This module provides functions for data processing, indicator normalization, and other helper utilities used by trading models.
+"""
+
 import os
 import pandas as pd
 
@@ -8,16 +14,11 @@ def all_y_same(data_y):
     which is often used in decision tree algorithms to determine if
     a node should be a leaf node.
 
-    Parameters
-    ----------
-    data_y : numpy.ndarray
-        Target values to check for homogeneity
+    Args:
+        data_y (numpy.ndarray): Target values to check for homogeneity.
 
-    Returns
-    -------
-    bool
-        True if all values are the same, False otherwise
-
+    Returns:
+        bool: True if all values are the same, False otherwise.
     """
     if_equal = data_y == data_y[0]
     if False in if_equal:
@@ -28,20 +29,14 @@ def all_y_same(data_y):
 
 def symbol_to_path(symbol, base_dir=None):
     """
-    This function converts a stock symbol to its corresponding CSV file path.
+    Convert a stock symbol to its corresponding CSV file path.
 
-    Parameters
-    ----------
-    symbol : str
-        Stock symbol to convert to the file path
-    base_dir : str, optional
-        Base directory for data files. If None, uses MARKET_DATA_DIR
-        environment variable or defaults to "./data/"
+    Args:
+        symbol (str): Stock symbol to convert to the file path.
+        base_dir (str, optional): Base directory for data files. If None, uses default data directory.
 
-    Returns
-    -------
-    str
-        Full path to the CSV file for the given symbol
+    Returns:
+        str: Full path to the CSV file for the given symbol.
     """
     if base_dir is None:
         # Always resolve data directory relative to the project root
@@ -53,25 +48,16 @@ def symbol_to_path(symbol, base_dir=None):
 
 def get_data(symbols, dates, add_spy=True, col_name="Adj Close"):
     """
-    This function loads historical stock data for the given symbols and dates,
-    optionally adding SPY data for reference. It handles missing data and
-    ensures all data is properly aligned by date.
+    Load historical stock data for the given symbols and dates, optionally adding SPY data for reference.
 
-    Parameters
-    ----------
-    symbols : list of str
-        List of stock symbols to load data for
-    dates : pandas.DatetimeIndex
-        Date range for the data
-    add_spy : bool, optional
-        Whether to add SPY data for reference, defaults to True
-    col_name : str, optional
-        Column name to use from the CSV files, defaults to "Adj Close"
+    Args:
+        symbols (list of str): List of stock symbols to load data for.
+        dates (pandas.DatetimeIndex): Date range for the data.
+        add_spy (bool, optional): Whether to add SPY data for reference. Defaults to True.
+        col_name (str, optional): Column name to use from the CSV files. Defaults to "Adj Close".
 
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame containing the stock data, indexed by date
+    Returns:
+        pandas.DataFrame: DataFrame containing the stock data, indexed by date.
     """
     df = pd.DataFrame(index=dates)
     df.index = df.index.tz_localize(None)
@@ -96,21 +82,14 @@ def get_data(symbols, dates, add_spy=True, col_name="Adj Close"):
 
 def process_data(symbol, dates):
     """
-    This function loads and processes stock data, handling missing values
-    and ensuring data consistency. It optionally removes SPY data if
-    the symbol is not SPY.
+    Load and process stock data, handling missing values and ensuring data consistency.
 
-    Parameters
-    ----------
-    symbol : str
-        Stock symbol to process data for
-    dates : pandas.DatetimeIndex
-        Date range for the data
+    Args:
+        symbol (str): Stock symbol to process data for.
+        dates (pandas.DatetimeIndex): Date range for the data.
 
-    Returns
-    -------
-    pandas.DataFrame
-        Processed stock price data
+    Returns:
+        pandas.DataFrame: Processed stock price data.
     """
     prices_train = get_data([symbol], dates)
 
@@ -125,21 +104,17 @@ def process_data(symbol, dates):
 
 def normalize_indicator(indicator, indicator_name="", scaler_map=None):
     """
-    This function performs min-max normalization on technical indicators,
-    scaling all values to be between 0 and 1.
+    Perform min-max normalization on technical indicators, scaling all values to be between 0 and 1.
 
-    Parameters
-    ----------
-    indicator : pandas.DataFrame
-        Technical indicator values to normalize
+    Args:
+        indicator (pandas.DataFrame): Technical indicator values to normalize.
+        indicator_name (str, optional): Name of the indicator.
+        scaler_map (dict, optional): Existing scaler map for normalization.
 
-    Returns
-    -------
-    pandas.DataFrame
-        Normalized indicator values
-        :param scaler_map:
+    Returns:
+        tuple: (normalized indicator DataFrame, min value, max value)
     """
-    if len(scaler_map) !=3:
+    if len(scaler_map) != 3:
         indicator_min = indicator.min()
         indicator_max = indicator.max()
     else:
@@ -153,26 +128,17 @@ def compute_portvals(
     trades, start_val=100000, commission=9.95, impact=0.005, symbol="JPM"
 ):
     """
-    This function computes the portfolio value over time based on a series
-    of trades, taking into account commission and market impact.
+    Compute the portfolio value over time based on a series of trades, taking into account commission and market impact.
 
-    Parameters
-    ----------
-    trades : pandas.DataFrame
-        DataFrame containing trade information
-    start_val : float, optional
-        Starting portfolio value, defaults to 100000
-    commission : float, optional
-        Commission per trade, defaults to 9.95
-    impact : float, optional
-        Market impact factor, defaults to 0.005
-    symbol : str, optional
-        Stock symbol being traded, defaults to 'JPM'
+    Args:
+        trades (pandas.DataFrame): DataFrame containing trade information.
+        start_val (float, optional): Starting portfolio value. Defaults to 100000.
+        commission (float, optional): Commission per trade. Defaults to 9.95.
+        impact (float, optional): Market impact factor. Defaults to 0.005.
+        symbol (str, optional): Stock symbol being traded. Defaults to 'JPM'.
 
-    Returns
-    -------
-    pandas.DataFrame
-        DataFrame containing portfolio values over time
+    Returns:
+        pandas.DataFrame: DataFrame containing portfolio values over time.
     """
     start_date = trades.index[0]
     end_date = trades.index[-1]

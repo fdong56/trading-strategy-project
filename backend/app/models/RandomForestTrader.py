@@ -6,28 +6,26 @@ from .BagEnsembleModel import BagEnsembleModel as bag
 from .TreeModel import TreeModel as tm
 
 
+"""
+RandomForestTrader: Implements a bagged decision tree (Random Forest) trading strategy with technical indicators.
+
+This class supports training and testing a trading model using historical price data and user-specified technical indicators.
+It normalizes indicators, classifies returns, and generates trading signals.
+"""
+
+
 class RandomForestTrader(object):
     """
-    A trading system that uses a Random Forest (ensemble of random trees) to make trading decisions.
-    The system uses technical indicators (Bollinger Bands, RSI, and Golden/Death Cross)
-    to predict future price movements and generate trading signals.
+    A trading strategy model using a bagged decision tree (Random Forest) approach.
 
-    Parameters
-    ----------
-    impact : float, optional
-        The market impact of each transaction, defaults to 0.0
-    commission : float, optional
-        The commission amount charged, defaults to 0.0
-    n_day_return : int, optional
-        Number of days to look ahead for return calculation, defaults to 5
-    y_buy : float, optional
-        Threshold for buy signal, defaults to 0.008
-    y_sell : float, optional
-        Threshold for sell signal, defaults to -0.008
-    leaf_size : int, optional
-        Maximum number of samples at leaf nodes in the decision tree, defaults to 6
-    num_bags : int, optional
-        Number of trees in the forest, defaults to 10
+    Attributes:
+        impact (float): Market impact parameter.
+        commission (float): Commission per trade.
+        N (int): Lookback period for N-day return.
+        YBUY (float): Threshold for buy signal.
+        YSELL (float): Threshold for sell signal.
+        learner: Bagged decision tree learner.
+        scaler_map (dict): Stores min/max scalers for each indicator.
     """
 
     # Constructor
@@ -42,7 +40,16 @@ class RandomForestTrader(object):
         num_bags=10,
     ):
         """
-        Initialize the trading system with specified parameters.
+        Initialize the RandomForestTrader with trading parameters and model configuration.
+
+        Args:
+            impact (float): Market impact parameter.
+            commission (float): Commission per trade.
+            n_day_return (int): Lookback period for N-day return.
+            y_buy (float): Buy threshold for N-day return.
+            y_sell (float): Sell threshold for N-day return.
+            leaf_size (int): Leaf size for decision tree.
+            num_bags (int): Number of bags for bagging.
         """
         self.scaler_map = {}
         self.impact = impact
@@ -63,16 +70,12 @@ class RandomForestTrader(object):
         """
         Train the trading model using historical data and user-specified indicators.
 
-        Parameters
-        ----------
-        symbol : str, optional
-            The stock symbol to train on, defaults to "IBM"
-        sd : datetime, optional
-            Start date for training data, defaults to 1/1/2008
-        ed : datetime, optional
-            End date for training data, defaults to 1/1/2009
-        indicators_with_params : dict, optional
-            Mapping of indicator names to their parameter dicts. If None, defaults will be used.
+        Args:
+            symbol (str): The stock symbol to train on.
+            sd (datetime): Start date for training data.
+            ed (datetime): End date for training data.
+            sv (float): Starting portfolio value (unused).
+            indicators_with_params (dict): Mapping of indicator names to their parameter dicts.
         """
 
         if indicators_with_params is None:
@@ -122,23 +125,13 @@ class RandomForestTrader(object):
         """
         Test the trading model on out-of-sample data using the same indicators and parameters as training.
 
-        Parameters
-        ----------
-        symbol : str, optional
-            The stock symbol to test on, defaults to "IBM"
-        sd : datetime, optional
-            Start date for test data, defaults to 1/1/2009
-        ed : datetime, optional
-            End date for test data, defaults to 1/1/2010
+        Args:
+            symbol (str): The stock symbol to test on.
+            sd (datetime): Start date for test data.
+            ed (datetime): End date for test data.
 
-        Returns
-        -------
-        pandas.DataFrame
-            A DataFrame with trading signals for each day:
-            - +1000.0: BUY 1000 shares
-            - -1000.0: SELL 1000 shares
-            - 0.0: NO TRADE
-            - +2000.0/-2000.0: Switch positions (long to short or vice versa)
+        Returns:
+            pandas.DataFrame: Trading signals for each day.
         """
 
         if (
@@ -173,6 +166,13 @@ class RandomForestTrader(object):
         return trades
 
     def predict(self, indicators_arr, symbol="IBM"):
+        """
+        Predict trading signals for given indicator values (not implemented).
+
+        Args:
+            indicators_arr (np.ndarray): Array of indicator values.
+            symbol (str): The stock symbol.
+        """
         if (
             not hasattr(self, "indicators_with_params")
             or self.indicators_with_params is None
@@ -183,25 +183,17 @@ class RandomForestTrader(object):
 
         pass
 
-    def get_indicators(self, prices_data, indicators_with_params):
+    def get_indicators(self, prices_data, indicators_with_params, scaler_map=None):
         """
         Calculate and normalize selected technical indicators with user-defined parameters.
 
-        Parameters
-        ----------
-        prices_data : pandas.DataFrame
-            Historical price data
-        indicators_with_params : dict
-            Mapping of indicator names to their parameter dicts. Example:
-            {
-                "gold cross": {"lookback_1": 10, "lookback_2": 15},
-                "bbp": {"lookback": 20},
-                "roc": {"lookback": 5}
-            }
+        Args:
+            prices_data (pandas.DataFrame): Historical price data.
+            indicators_with_params (dict): Mapping of indicator names to their parameter dicts.
+            scaler_map (dict, optional): Existing scaler map for normalization.
 
-        Returns
-        -------
-        pandas.DataFrame containing the selected normalized technical indicators.
+        Returns:
+            pandas.DataFrame: Normalized technical indicators.
         """
 
         indicator_funcs = {
@@ -224,7 +216,9 @@ class RandomForestTrader(object):
                 except (ValueError, TypeError):
                     pass
             indi_df = indicator_funcs[name](prices_data, **params)
-            indi_df, scaler_min_, scaler_max_ = utility.normalize_indicator(indi_df, indicator_name=name, scaler_map=self.scaler_map)
+            indi_df, scaler_min_, scaler_max_ = utility.normalize_indicator(
+                indi_df, indicator_name=name, scaler_map=self.scaler_map
+            )
             self.scaler_map[name] = [scaler_min_, scaler_max_]
             indicator_mapping[name] = indi_df
 
