@@ -28,6 +28,7 @@ class QLearningTrader(object):
         :type commission: float
         """
 
+        self.scaler_map = {}
         self.impact = impact
         self.commission = commission
         self.learner = None
@@ -189,15 +190,27 @@ class QLearningTrader(object):
             "rsi": indicators.rsi_indicator,
         }
         # Compute the three indicators
-        indicator_dfs = []
+        indi_states = None
+        scaler = 100
         for name, params in indicators_with_params.items():
             if name not in indicator_funcs:
                 raise ValueError(f"Indicator '{name}' is not supported.")
             # Convert all parameters to integers
             params = {k: int(v) for k, v in params.items()}
             df = indicator_funcs[name](prices_data, **params)
-            indicator_dfs.append(df)
-        indi_states = self.discretize(*indicator_dfs)
+            indicator_norm = self.discretize_(indicator_name=name, indicator_df=df)
+            if indi_states is None:
+                indi_states = indicator_norm.copy()
+                indi_states[indi_states.columns[0]] = 0
+            indi_states[indi_states.columns[0]] += (
+                indicator_norm[indicator_norm.columns[0]] * scaler
+            )
+            scaler /= 10
+
+        indi_states.ffill(inplace=True)
+        indi_states.bfill(inplace=True)
+        indi_states = indi_states.astype("int32")
+
         return indi_states
 
     def calculate_reward(self, i_day, a, holding, prices_data):
@@ -239,26 +252,14 @@ class QLearningTrader(object):
             r -= self.impact
         return r, to_buy, updated_holding
 
-    def discretize(self, indicator_1, indicator_2, indicator_3):
-        indicator_1_norm = utility.normalize_indicator(indicator_1)
-        indicator_2_norm = utility.normalize_indicator(indicator_2)
-        indicator_3_norm = utility.normalize_indicator(indicator_3)
-        indicator_1_norm[indicator_1.columns[0]] = pd.cut(
-            indicator_1_norm[indicator_1_norm.columns[0]], self.bins, labels=False
+    def discretize_(self, indicator_name="", indicator_df=None):
+        indicator_norm, scaler_min_, scaler_max_ = utility.normalize_indicator(
+            indicator_df, indicator_name=indicator_name, scaler_map=self.scaler_map
         )
-        indicator_2_norm[indicator_2.columns[0]] = pd.cut(
-            indicator_2_norm[indicator_2_norm.columns[0]], self.bins, labels=False
+        if len(self.scaler_map) != 3:
+            self.scaler_map[indicator_name] = [scaler_min_, scaler_max_]
+
+        indicator_norm[indicator_df.columns[0]] = pd.cut(
+            indicator_norm[indicator_norm.columns[0]], self.bins, labels=False
         )
-        indicator_3_norm[indicator_3.columns[0]] = pd.cut(
-            indicator_3_norm[indicator_3_norm.columns[0]], self.bins, labels=False
-        )
-        indicator_state = indicator_1_norm.copy()
-        indicator_state[indicator_state.columns[0]] = (
-            indicator_1_norm[indicator_1_norm.columns[0]] * 100
-            + indicator_2_norm[indicator_2_norm.columns[0]] * 10
-            + indicator_3_norm[indicator_3_norm.columns[0]]
-        )
-        indicator_state.ffill(inplace=True)
-        indicator_state.bfill(inplace=True)
-        indicator_state = indicator_state.astype("int32")
-        return indicator_state
+        return indicator_norm

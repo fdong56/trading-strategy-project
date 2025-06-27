@@ -144,8 +144,7 @@ class RandomForestTrader(object):
 
         prices_test = utility.process_data(symbol, pd.date_range(sd, ed))
         indicators_test_df = self.get_indicators(
-            prices_test,
-            self.indicators_with_params,
+            prices_test, self.indicators_with_params
         )
         data_test_x_arr = indicators_test_df.to_numpy()
         predict_res = self.learner.query(data_test_x_arr)
@@ -181,9 +180,10 @@ class RandomForestTrader(object):
                 "No indicators_with_params stored from training. Please train the model first."
             )
 
+        ## TODO
         pass
 
-    def get_indicators(self, prices_data, indicators_with_params, scaler_map=None):
+    def get_indicators(self, prices_data, indicators_with_params):
         """
         Calculate and normalize selected technical indicators with user-defined parameters.
 
@@ -219,7 +219,9 @@ class RandomForestTrader(object):
             indi_df, scaler_min_, scaler_max_ = utility.normalize_indicator(
                 indi_df, indicator_name=name, scaler_map=self.scaler_map
             )
-            self.scaler_map[name] = [scaler_min_, scaler_max_]
+            if len(self.scaler_map) != 3:
+                self.scaler_map[name] = [scaler_min_, scaler_max_]
+
             indicator_mapping[name] = indi_df
 
         # Join all selected indicators
