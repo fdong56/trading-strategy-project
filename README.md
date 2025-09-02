@@ -2,7 +2,19 @@
 
 A comprehensive web application for developing, training, and testing machine learning-based trading strategies. This project combines a FastAPI backend with a React frontend to provide an interactive platform for algorithmic trading research.
 
-## 🚀 Features
+A live demo of this application is available online:
+
+- **Frontend Application**: [https://trading-frontend-g1xl.onrender.com/](https://trading-frontend-g1xl.onrender.com/)
+- **Backend API**: [https://trading-backend-32vw.onrender.com/](https://trading-backend-32vw.onrender.com/)
+
+**Important Note**: The demo is hosted on Render's free tier, which means both applications will become inactive after periods of inactivity. To ensure optimal functionality:
+
+1. First visit the backend API to activate the server
+2. Then access the frontend application
+
+This activation process ensures both services are running before attempting to use the trading strategy features.
+
+## Features
 
 ### Trading Models
 - **QLearningTrader**: Reinforcement learning-based trading strategy using Q-Learning algorithm
@@ -22,7 +34,7 @@ A comprehensive web application for developing, training, and testing machine le
 - **Historical Data**: Extensive S&P 500 stock dataset (2008-2012)
 - **Parameter Tuning**: Dynamic form controls for strategy optimization
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 trading-strategy-project/
@@ -55,7 +67,7 @@ trading-strategy-project/
 └── environment.yml        # Conda environment setup
 ```
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
 - **FastAPI**: Modern Python web framework for building APIs
@@ -75,7 +87,7 @@ trading-strategy-project/
 - **CSV Format**: Standard financial data format
 - **Real-time Processing**: On-demand data loading and analysis
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 - Python 3.9+
@@ -117,7 +129,7 @@ trading-strategy-project/
    npm install
    ```
 
-## 🚀 Running the Application
+## Running the Application
 
 ### Development Mode
 
@@ -138,21 +150,7 @@ trading-strategy-project/
    - Backend API: http://localhost:8000
    - API Documentation: http://localhost:8000/docs
 
-### Production Mode
-
-A live demo of this application is available online:
-
-- **Frontend Application**: [https://trading-frontend-g1xl.onrender.com/](https://trading-frontend-g1xl.onrender.com/)
-- **Backend API**: [https://trading-backend-32vw.onrender.com/](https://trading-backend-32vw.onrender.com/)
-
-**Important Note**: The demo is hosted on Render's free tier, which means both applications will become inactive after periods of inactivity. To ensure optimal functionality:
-
-1. First visit the backend API to activate the server
-2. Then access the frontend application
-
-This activation process ensures both services are running before attempting to use the trading strategy features.
-
-## 📊 Usage Guide
+## Usage Guide
 
 ### 1. Stock Selection
 - Choose from available S&P 500 stocks in the dropdown
@@ -206,7 +204,7 @@ This activation process ensures both services are running before attempting to u
 }
 ```
 
-## 📈 Trading Strategies
+## Trading Strategies
 
 ### QLearningTrader
 - **Algorithm**: Q-Learning reinforcement learning
@@ -218,7 +216,7 @@ This activation process ensures both services are running before attempting to u
 - **Features**: Feature engineering, ensemble voting, overfitting prevention
 - **Parameters**: Leaf size, number of bags, buy/sell thresholds
 
-## 🧪 Testing and Validation
+## Testing and Validation
 
 ### Performance Metrics
 - Portfolio value over time
@@ -231,19 +229,12 @@ This activation process ensures both services are running before attempting to u
 - Parameter boundary validation
 - Model convergence verification
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - CORS configuration for cross-origin requests
 - Input validation and sanitization
 - Error handling and logging
 - Rate limiting (recommended for production)
-
-## 📞 Support
-
-For questions, issues, or contributions, please:
-- Open an issue on GitHub
-- Check the API documentation at `/docs`
-- Review the troubleshooting section above
 
 ---
 
