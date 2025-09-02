@@ -172,7 +172,7 @@ trading-strategy-project/
 - **Test Model**: Click "Test Model" to evaluate performance
 - **View Results**: Interactive charts show portfolio performance vs benchmark
 
-## 🔧 API Endpoints
+## API Endpoints
 
 ### Core Endpoints
 - `GET /`: API information and available models
